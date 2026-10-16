@@ -24,7 +24,7 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 
 ## Repository audit
 
-The deployment work is on the `codex/deployment` branch. The deployment preparation commit is `c0f99e4` (`Prepare InterviewIQ for deployment`). Existing application and database records are not modified by the application startup configuration beyond Hibernate's existing `update` behavior.
+The deployment work is on the `codex/deployment` branch. The current authentication fix is `64bf61e` (`Fix hosted authentication`), based on the deployment preparation commit `c0f99e4`. Existing application and database records are not modified by the application startup configuration beyond Hibernate's existing `update` behavior.
 
 ## Configuration and secrets
 
@@ -35,16 +35,18 @@ The backend reads connection and security settings from environment variables. N
 | `DATABASE_URL` | JDBC PostgreSQL URL | `jdbc:postgresql://localhost:5432/interviewjournal` |
 | `DB_USERNAME` | PostgreSQL username | `injamam` |
 | `DB_PASSWORD` | PostgreSQL password | empty for an existing passwordless local setup |
-| `JWT_SECRET` | Base64-encoded JWT signing key | required; no default |
+| `JWT_SECRET` | JWT signing key, Base64 or raw | required; at least 32 bytes |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins | `http://localhost:5173,http://127.0.0.1:5173` |
 | `JPA_DDL_AUTO` | Hibernate schema behavior | `update` |
 | `PORT` | Backend HTTP port | `8080` |
 
-Generate a suitable local JWT secret with:
+Generate a suitable local Base64 JWT secret with:
 
 ```bash
 openssl rand -base64 32
 ```
+
+The application also accepts a raw secret when it contains at least 32 bytes. Keep the value private and do not commit it.
 
 For a production database, keep a backup and introduce a versioned migration process before changing `JPA_DDL_AUTO` to `validate`. Do not use `docker compose down -v`; the named PostgreSQL volume is the persistent application data store.
 
@@ -163,7 +165,7 @@ The Spring context test uses an isolated H2 test profile, so it does not require
 
 The frontend browser smoke test verified that `/register` renders and its sign-in action reaches `/login`.
 
-The hosted smoke test verified that the Render frontend serves the login page, the signup screen opens, the browser reports no frontend console errors, and the Render backend starts successfully with a connection to Neon PostgreSQL. Full authenticated user and admin actions require credentials for an account in the hosted database and should be exercised without sharing passwords in source control or chat.
+The hosted smoke test verified that the Render frontend serves the login page, the signup screen opens, the browser reports no frontend console errors, the backend starts successfully with a connection to Neon PostgreSQL, a synthetic account can register and log in, and an authenticated session can load the dashboard. Full admin actions require an admin account in the hosted database and should be exercised without sharing passwords in source control or chat.
 
 ## API access rules
 
