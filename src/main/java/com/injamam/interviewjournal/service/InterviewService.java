@@ -49,7 +49,15 @@ public class InterviewService {
 
         interview.setCompanyName(request.getCompanyName());
         interview.setRole(request.getRole());
-        interview.setStatus(InterviewStatus.APPLIED);
+        interview.setApplicationDate(request.getApplicationDate());
+        interview.setCurrentRound(request.getCurrentRound());
+        interview.setNextRoundDate(request.getNextRoundDate());
+        interview.setOverallFeedback(request.getOverallFeedback());
+        interview.setStatus(
+                request.getStatus() == null
+                        ? InterviewStatus.APPLIED
+                        : request.getStatus()
+        );
         interview.setUser(currentUser);
 
         return interviewRepository.save(interview);
@@ -66,29 +74,26 @@ public class InterviewService {
 
     public Interview getInterviewById(Long id) {
 
-        Interview interview = interviewRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Interview not found"));
-
-        User currentUser = getCurrentUser();
-
-        if (!interview.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Access Denied");
-        }
-
-        return interview;
+        return getAuthorizedInterview(id);
     }
 
     public Interview updateInterview(Long id, Interview updatedInterview) {
 
         Interview existingInterview = getAuthorizedInterview(id);
 
-        existingInterview.setCompanyName(updatedInterview.getCompanyName());
-        existingInterview.setRole(updatedInterview.getRole());
+        if (updatedInterview.getCompanyName() != null) {
+            existingInterview.setCompanyName(updatedInterview.getCompanyName());
+        }
+        if (updatedInterview.getRole() != null) {
+            existingInterview.setRole(updatedInterview.getRole());
+        }
         existingInterview.setApplicationDate(updatedInterview.getApplicationDate());
         existingInterview.setCurrentRound(updatedInterview.getCurrentRound());
         existingInterview.setNextRoundDate(updatedInterview.getNextRoundDate());
         existingInterview.setOverallFeedback(updatedInterview.getOverallFeedback());
-        existingInterview.setStatus(updatedInterview.getStatus());
+        if (updatedInterview.getStatus() != null) {
+            existingInterview.setStatus(updatedInterview.getStatus());
+        }
 
         return interviewRepository.save(existingInterview);
     }
@@ -104,8 +109,9 @@ public class InterviewService {
 
         User currentUser = getCurrentUser();
 
-        if (!currentUser.getId().equals(userId)) {
-            throw new RuntimeException("Access Denied");
+        if (!currentUser.getId().equals(userId)
+                && currentUser.getRole() != Role.ADMIN) {
+            throw new InterviewAccessDeniedException();
         }
 
         return interviewRepository.findByUserId(userId);
@@ -130,13 +136,13 @@ public class InterviewService {
     private Interview getAuthorizedInterview(Long interviewId) {
 
         Interview interview = interviewRepository.findById(interviewId)
-                .orElseThrow(() ->
-                        new RuntimeException("Interview not found"));
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
 
         User currentUser = getCurrentUser();
 
-        if (!interview.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Access Denied");
+        if (currentUser.getRole() != Role.ADMIN
+                && !interview.getUser().getId().equals(currentUser.getId())) {
+            throw new InterviewAccessDeniedException();
         }
 
         return interview;

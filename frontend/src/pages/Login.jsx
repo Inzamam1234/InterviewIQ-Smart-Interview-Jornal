@@ -225,11 +225,7 @@ function Login() {
                     <button
                         type="button"
                         style={styles.signUpButton}
-                        onClick={() => {
-                            alert(
-                                "Registration functionality will be added soon."
-                            );
-                        }}
+                        onClick={() => navigate("/register")}
                     >
                         Sign Up
                     </button>

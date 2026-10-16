@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import api from "../api/axios";
 
 function EditInterview() {
 
     const { id } = useParams();
+    const location = useLocation();
     const navigate = useNavigate();
+    const isNew = id === "new" || location.pathname === "/interviews/new";
 
     const [form, setForm] = useState({
         companyName: "",
@@ -28,6 +30,10 @@ function EditInterview() {
     /* -------------------------------- */
 
     useEffect(() => {
+
+        if (isNew) {
+            return;
+        }
 
         const fetchInterview = async () => {
 
@@ -96,7 +102,7 @@ function EditInterview() {
 
         fetchInterview();
 
-    }, [id]);
+    }, [id, isNew]);
 
 
     /* -------------------------------- */
@@ -128,16 +134,11 @@ function EditInterview() {
 
         try {
 
-            await api.put(
-                `/interviews/${id}`,
-                form
-            );
+            const response = isNew
+                ? await api.post("/interviews", form)
+                : await api.put(`/interviews/${id}`, form);
 
-            console.log(
-                "Interview updated successfully"
-            );
-
-            navigate(`/interviews/${id}`);
+            navigate(`/interviews/${isNew ? response.data.id : id}`);
 
         } catch (error) {
 
@@ -178,7 +179,7 @@ function EditInterview() {
     /* Loading state                    */
     /* -------------------------------- */
 
-    if (loading) {
+    if (loading && !isNew) {
 
         return (
 
@@ -198,7 +199,7 @@ function EditInterview() {
     /* Failed to load                   */
     /* -------------------------------- */
 
-    if (error && !form.companyName) {
+    if (error && !form.companyName && !isNew) {
 
         return (
 
@@ -243,7 +244,7 @@ function EditInterview() {
             <button
                 style={styles.backButton}
                 onClick={() =>
-                    navigate(`/interviews/${id}`)
+                    navigate(isNew ? "/interviews" : `/interviews/${id}`)
                 }
             >
 
@@ -263,12 +264,13 @@ function EditInterview() {
                 <div>
 
                     <h1 style={styles.title}>
-                        Edit Interview
+                        {isNew ? "Add Interview" : "Edit Interview"}
                     </h1>
 
                     <p style={styles.subtitle}>
-                        Update your interview information
-                        and keep your progress up to date.
+                        {isNew
+                            ? "Record a new interview and track your progress."
+                            : "Update your interview information and keep your progress up to date."}
                     </p>
 
                 </div>
@@ -415,6 +417,10 @@ function EditInterview() {
                             Rejected
                         </option>
 
+                        <option value="ON_HOLD">
+                            On Hold
+                        </option>
+
                     </select>
 
                 </div>
@@ -459,7 +465,7 @@ function EditInterview() {
                         type="button"
                         style={styles.cancelButton}
                         onClick={() =>
-                            navigate(`/interviews/${id}`)
+                            navigate(isNew ? "/interviews" : `/interviews/${id}`)
                         }
                         disabled={saving}
                     >
@@ -482,7 +488,7 @@ function EditInterview() {
 
                         {saving
                             ? "Saving..."
-                            : "Save Changes"}
+                            : isNew ? "Create Interview" : "Save Changes"}
 
                     </button>
 

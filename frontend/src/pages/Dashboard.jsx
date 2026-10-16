@@ -30,7 +30,7 @@ function Dashboard() {
     // FETCH DASHBOARD DATA
     // =========================================================
 
-    const loadDashboard = async () => {
+    async function loadDashboard() {
 
         try {
 
@@ -109,7 +109,7 @@ function Dashboard() {
 
         }
 
-    };
+    }
 
 
     // =========================================================
@@ -949,7 +949,6 @@ function StatCard({
 
 function ProgressRow({
                          label,
-                         value,
                          percentage,
                          progressStyle
                      }) {

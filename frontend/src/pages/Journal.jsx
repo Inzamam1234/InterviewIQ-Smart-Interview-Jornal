@@ -19,14 +19,7 @@ function Journal() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
-    // ==============================
-    // LOAD INTERVIEWS
-    // ==============================
-    useEffect(() => {
-        loadInterviews();
-    }, []);
-
-    const loadInterviews = async () => {
+    async function loadInterviews() {
         try {
 
             setLoadingInterviews(true);
@@ -51,7 +44,16 @@ function Journal() {
 
             setLoadingInterviews(false);
         }
-    };
+    }
+
+    // ==============================
+    // LOAD INTERVIEWS
+    // ==============================
+    useEffect(() => {
+        // The async loader owns the loading/error state for this page.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        loadInterviews();
+    }, []);
 
     // ==============================
     // LOAD JOURNAL

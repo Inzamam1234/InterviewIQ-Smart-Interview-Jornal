@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class UserController {
 
     @PostMapping
     public User createUser(
-            @RequestBody RegisterUserRequest request) {
+            @Valid @RequestBody RegisterUserRequest request) {
 
         return userService.saveUser(request);
     }

@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const baseURL =
+    import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 const api = axios.create({
-    baseURL: "http://localhost:8080",
+    baseURL: baseURL.replace(/\/$/, ""),
     headers: {
         "Content-Type": "application/json",
     },
@@ -21,7 +24,7 @@ api.interceptors.request.use(
          * IMPORTANT:
          * Do NOT send an old JWT when logging in.
          */
-        if (config.url === "/auth/login") {
+        if (config.url === "/auth/login" || config.url === "/auth/register") {
 
             delete config.headers.Authorization;
 

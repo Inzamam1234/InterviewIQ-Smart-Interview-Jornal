@@ -33,11 +33,11 @@ public class Interview {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "interview")
+    @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Question> questions;
 
-    @OneToMany(mappedBy = "interview")
+    @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<JournalEntry> journalEntries;
 

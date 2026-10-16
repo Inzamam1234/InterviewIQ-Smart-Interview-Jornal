@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import io.jsonwebtoken.JwtException;
 
 import java.io.IOException;
 
@@ -36,60 +37,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        System.out.println("Header = " + authHeader);
-
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
-
-            System.out.println("JWT NOT FOUND");
-
             filterChain.doFilter(request, response);
             return;
         }
 
-        System.out.println("JWT FOUND");
-
         String jwt = authHeader.substring(7);
 
-        String username =
-                jwtService.extractUsername(jwt);
+        try {
+            String username = jwtService.extractUsername(jwt);
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(username);
 
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(username);
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-        if (jwtService.isTokenValid(jwt, userDetails)) {
-
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-
-            SecurityContextHolder
-                    .getContext()
-                    .setAuthentication(authentication);
-
-            System.out.println("================================");
-            System.out.println(
-                    "Authenticated User : "
-                            + authentication.getName()
-            );
-            System.out.println(
-                    "Authorities        : "
-                            + authentication.getAuthorities()
-            );
-            System.out.println("================================");
-
-            System.out.println(
-                    "User = "
-                            + authentication.getName()
-            );
-
-            System.out.println(
-                    "Authorities = "
-                            + authentication.getAuthorities()
-            );
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authentication);
+            }
+        } catch (JwtException | IllegalArgumentException | org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
+            // Leave the request unauthenticated; Spring Security will return 401/403 as appropriate.
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

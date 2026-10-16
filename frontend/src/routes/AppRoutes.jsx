@@ -13,6 +13,7 @@ import Questions from "../pages/Questions";
 import Journal from "../pages/Journal";
 import Settings from "../pages/Settings";
 import Login from "../pages/Login";
+import Register from "../pages/Register";
 import InterviewDetails from "../pages/InterviewDetails";
 import EditInterview from "../pages/EditInterview";
 import AdminDashboard from "../pages/AdminDashboard";
@@ -150,6 +151,11 @@ function AppRoutes() {
                 element={<Login />}
             />
 
+            <Route
+                path="/register"
+                element={<Register />}
+            />
+
 
             {/* ================================ */}
             {/* Protected Routes                 */}
@@ -218,19 +224,23 @@ function AppRoutes() {
                 {/* Interview Details                 */}
                 {/* -------------------------------- */}
 
-                <Route
-                    path="/interviews/:id"
-                    element={<InterviewDetails />}
-                />
-
-
                 {/* -------------------------------- */}
                 {/* Edit Interview                    */}
                 {/* -------------------------------- */}
 
                 <Route
+                    path="/interviews/new"
+                    element={<EditInterview />}
+                />
+
+                <Route
                     path="/interviews/:id/edit"
                     element={<EditInterview />}
+                />
+
+                <Route
+                    path="/interviews/:id"
+                    element={<InterviewDetails />}
                 />
 
 

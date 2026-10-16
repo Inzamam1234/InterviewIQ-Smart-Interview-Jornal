@@ -3,6 +3,7 @@ package com.injamam.interviewjournal.service;
 import com.injamam.interviewjournal.dto.RegisterUserRequest;
 import com.injamam.interviewjournal.entity.User;
 import com.injamam.interviewjournal.repository.UserRepository;
+import com.injamam.interviewjournal.repository.InterviewRepository;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.injamam.interviewjournal.enums.Role;
 
 import java.util.List;
+import java.util.Locale;
 
 
 @Service
@@ -18,14 +20,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final InterviewRepository interviewRepository;
 
 
     public UserService(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            InterviewRepository interviewRepository) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.interviewRepository = interviewRepository;
     }
 
 
@@ -35,11 +40,17 @@ public class UserService {
 
     public User saveUser(RegisterUserRequest request) {
 
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("An account with this email already exists");
+        }
+
         User user = new User();
 
         user.setName(request.getName());
 
-        user.setEmail(request.getEmail());
+        user.setEmail(email);
 
         user.setPassword(
                 passwordEncoder.encode(
@@ -205,6 +216,12 @@ public class UserService {
 
             throw new RuntimeException(
                     "You cannot delete your own account."
+            );
+        }
+
+        if (interviewRepository.countByUserId(id) > 0) {
+            throw new IllegalStateException(
+                    "Cannot delete a user who owns interviews. Delete those interviews first."
             );
         }
 

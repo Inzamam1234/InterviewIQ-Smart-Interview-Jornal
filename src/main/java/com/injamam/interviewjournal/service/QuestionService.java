@@ -4,6 +4,9 @@ import com.injamam.interviewjournal.dto.CreateQuestionRequest;
 import com.injamam.interviewjournal.entity.Interview;
 import com.injamam.interviewjournal.entity.Question;
 import com.injamam.interviewjournal.entity.User;
+import com.injamam.interviewjournal.enums.Role;
+import com.injamam.interviewjournal.exception.InterviewAccessDeniedException;
+import com.injamam.interviewjournal.exception.InterviewNotFoundException;
 import com.injamam.interviewjournal.repository.InterviewRepository;
 import com.injamam.interviewjournal.repository.QuestionRepository;
 import com.injamam.interviewjournal.repository.UserRepository;
@@ -58,19 +61,18 @@ public class QuestionService {
     private Interview getAuthorizedInterview(Long interviewId) {
 
         Interview interview = interviewRepository.findById(interviewId)
-                .orElseThrow(() ->
-                        new RuntimeException("Interview not found"));
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
 
         User currentUser = getCurrentUser();
 
         // ADMIN can access any interview
-        if (currentUser.getRole().name().equals("ADMIN")) {
+        if (currentUser.getRole() == Role.ADMIN) {
             return interview;
         }
 
         // USER can access only their own interview
         if (!interview.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Access Denied");
+            throw new InterviewAccessDeniedException();
         }
 
         return interview;

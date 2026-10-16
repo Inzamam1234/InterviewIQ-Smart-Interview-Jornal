@@ -61,8 +61,6 @@ function Sidebar() {
 
                 const response = await api.get("/users/me");
 
-                console.log("CURRENT USER:", response.data);
-
                 setUser(response.data);
 
             } catch (error) {

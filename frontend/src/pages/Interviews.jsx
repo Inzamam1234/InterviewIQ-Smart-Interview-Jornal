@@ -32,6 +32,8 @@ function Interviews() {
 
         fetchInterviews();
 
+    // Search/filter state intentionally selects a different request path.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
 
 
@@ -53,6 +55,7 @@ function Interviews() {
 
         return () => clearTimeout(timer);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, statusFilter]);
 
 
@@ -60,7 +63,7 @@ function Interviews() {
     /* Normal Paginated Interviews                        */
     /* ================================================= */
 
-    const fetchInterviews = async () => {
+    async function fetchInterviews() {
 
         setLoading(true);
         setError("");
@@ -90,14 +93,14 @@ function Interviews() {
             setLoading(false);
 
         }
-    };
+    }
 
 
     /* ================================================= */
     /* Search Interviews                                 */
     /* ================================================= */
 
-    const searchInterviews = async () => {
+    async function searchInterviews() {
 
         setSearching(true);
         setError("");
@@ -118,7 +121,8 @@ function Interviews() {
                 "APPLIED",
                 "IN_PROGRESS",
                 "SELECTED",
-                "REJECTED"
+                "REJECTED",
+                "ON_HOLD"
             ];
 
 
@@ -186,7 +190,7 @@ function Interviews() {
             setLoading(false);
 
         }
-    };
+    }
 
 
     /* ================================================= */
@@ -467,6 +471,10 @@ function Interviews() {
 
                     <option value="REJECTED">
                         Rejected
+                    </option>
+
+                    <option value="ON_HOLD">
+                        On Hold
                     </option>
 
                 </select>

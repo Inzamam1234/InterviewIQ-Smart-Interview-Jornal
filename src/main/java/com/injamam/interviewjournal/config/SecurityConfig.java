@@ -12,11 +12,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -24,9 +27,16 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final List<String> allowedOrigins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            @Value("${app.cors.allowed-origins}") String allowedOrigins) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList();
     }
 
     @Bean
@@ -39,6 +49,13 @@ public class SecurityConfig {
                 // Enable CORS for React frontend
                 .cors(cors ->
                         cors.configurationSource(corsConfigurationSource())
+                )
+
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendError(
+                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Unauthorized"))
                 )
 
                 .authorizeHttpRequests(auth -> auth
@@ -96,9 +113,7 @@ public class SecurityConfig {
                 new CorsConfiguration();
 
         // React frontend
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
+        configuration.setAllowedOrigins(allowedOrigins);
 
         // HTTP methods allowed from React
         configuration.setAllowedMethods(

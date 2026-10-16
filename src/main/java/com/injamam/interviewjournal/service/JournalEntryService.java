@@ -5,6 +5,10 @@ import com.injamam.interviewjournal.entity.Interview;
 import com.injamam.interviewjournal.entity.JournalEntry;
 import com.injamam.interviewjournal.repository.InterviewRepository;
 import com.injamam.interviewjournal.repository.JournalEntryRepository;
+import com.injamam.interviewjournal.enums.Role;
+import com.injamam.interviewjournal.exception.InterviewAccessDeniedException;
+import com.injamam.interviewjournal.exception.InterviewNotFoundException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +33,7 @@ public class JournalEntryService {
             CreateJournalEntryRequest request) {
 
         Interview interview = interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new RuntimeException("Interview not found"));
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
 
         checkInterviewOwnership(interview);
 
@@ -49,7 +53,7 @@ public class JournalEntryService {
             Long interviewId) {
 
         Interview interview = interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new RuntimeException("Interview not found"));
+                .orElseThrow(() -> new InterviewNotFoundException(interviewId));
 
         checkInterviewOwnership(interview);
 
@@ -58,16 +62,17 @@ public class JournalEntryService {
 
     private void checkInterviewOwnership(Interview interview) {
 
-        String loggedInUsername =
-                SecurityContextHolder.getContext()
-                        .getAuthentication()
-                        .getName();
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
         String interviewOwnerEmail =
                 interview.getUser().getEmail();
 
-        if (!loggedInUsername.equals(interviewOwnerEmail)) {
-            throw new RuntimeException("Access denied");
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + Role.ADMIN));
+
+        if (!isAdmin && !authentication.getName().equals(interviewOwnerEmail)) {
+            throw new InterviewAccessDeniedException();
         }
     }
 }

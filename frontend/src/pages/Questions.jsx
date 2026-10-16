@@ -115,6 +115,8 @@ function Questions() {
 
     useEffect(() => {
 
+        // The async loader owns the loading/error state for this page.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadQuestions();
 
     }, []);
