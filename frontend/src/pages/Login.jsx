@@ -53,7 +53,10 @@ function Login() {
 
             console.error("Login error:", error);
 
-            setError("Invalid email or password.");
+            setError(
+                error.response?.data?.message ||
+                "Unable to sign in right now. Please try again."
+            );
 
         } finally {
 

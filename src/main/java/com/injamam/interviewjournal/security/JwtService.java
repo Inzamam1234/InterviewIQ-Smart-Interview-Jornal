@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import java.util.Date;
+import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 
 
@@ -21,7 +22,25 @@ public class JwtService {
     private long jwtExpiration;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        byte[] configuredBytes = secret.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes;
+
+        try {
+            byte[] decodedBytes = Decoders.BASE64.decode(secret);
+            keyBytes = decodedBytes.length >= 32
+                    ? decodedBytes
+                    : configuredBytes;
+        } catch (IllegalArgumentException exception) {
+            // Render's secret generator can produce a raw string rather than Base64.
+            keyBytes = configuredBytes;
+        }
+
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "jwt.secret must contain at least 32 bytes"
+            );
+        }
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

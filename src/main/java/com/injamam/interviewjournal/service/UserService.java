@@ -74,7 +74,7 @@ public class UserService {
 
     public User getUserByEmail(String email) {
 
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT))
                 .orElseThrow(() ->
                         new RuntimeException("User not found"));
     }

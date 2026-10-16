@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/auth")
@@ -39,10 +40,12 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
 
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
+                            email,
                             request.getPassword()
                     )
             );
@@ -54,7 +57,7 @@ public class AuthenticationController {
             ));
         }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
         String token = jwtService.generateToken(userDetails);
 
