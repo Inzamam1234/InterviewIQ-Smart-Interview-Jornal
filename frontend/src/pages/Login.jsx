@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function Login() {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(
+        () => location.state?.email || localStorage.getItem("rememberedEmail") || ""
+    );
     const [password, setPassword] = useState("");
 
     const [rememberMe, setRememberMe] = useState(false);
@@ -14,6 +17,19 @@ function Login() {
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [notice, setNotice] = useState(
+        () => location.state?.registered
+            ? "Your account was created. Sign in to continue."
+            : sessionStorage.getItem("interviewiq.sessionExpired")
+                ? "Your session expired. Please sign in again."
+            : ""
+    );
+
+    useEffect(() => {
+        if (sessionStorage.getItem("interviewiq.sessionExpired")) {
+            sessionStorage.removeItem("interviewiq.sessionExpired");
+        }
+    }, []);
 
 
     const handleLogin = async (e) => {
@@ -21,7 +37,10 @@ function Login() {
         e.preventDefault();
 
         setError("");
+        setNotice("");
         setLoading(true);
+
+        const normalizedEmail = email.trim().toLowerCase();
 
         try {
 
@@ -29,7 +48,7 @@ function Login() {
             localStorage.removeItem("token");
 
             const response = await api.post("/auth/login", {
-                email: email,
+                email: normalizedEmail,
                 password: password
             });
 
@@ -41,7 +60,7 @@ function Login() {
 
             // Remember email if selected
             if (rememberMe) {
-                localStorage.setItem("rememberedEmail", email);
+                localStorage.setItem("rememberedEmail", normalizedEmail);
             } else {
                 localStorage.removeItem("rememberedEmail");
             }
@@ -108,6 +127,7 @@ function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             autoComplete="email"
+                            aria-label="Email address"
                             style={styles.input}
                         />
 
@@ -133,6 +153,7 @@ function Login() {
                                 }
                                 required
                                 autoComplete="current-password"
+                                aria-label="Password"
                                 style={styles.passwordInput}
                             />
 
@@ -176,11 +197,7 @@ function Login() {
                         <button
                             type="button"
                             style={styles.forgotButton}
-                            onClick={() => {
-                                alert(
-                                    "Password reset functionality will be added soon."
-                                );
-                            }}
+                            onClick={() => setError("Password reset is not available yet. Please contact support.")}
                         >
                             Forgot Password?
                         </button>
@@ -189,6 +206,12 @@ function Login() {
 
 
                     {/* Error */}
+
+                    {notice && (
+                        <div style={styles.notice} role="status">
+                            {notice}
+                        </div>
+                    )}
 
                     {error && (
                         <div style={styles.error}>
@@ -284,7 +307,7 @@ const styles = {
 
     title: {
         margin: "0",
-        fontSize: "50px",
+        fontSize: "clamp(38px, 8vw, 50px)",
         lineHeight: "1.08",
         fontWeight: "720",
         letterSpacing: "-2.2px",
@@ -427,6 +450,17 @@ const styles = {
         marginBottom: "18px"
     },
 
+    notice: {
+        color: "#047857",
+        background: "#ecfdf5",
+        border: "1px solid #a7f3d0",
+        borderRadius: "8px",
+        padding: "10px 12px",
+        fontSize: "13px",
+        marginTop: "-22px",
+        marginBottom: "18px"
+    },
+
 
     /* ================================= */
     /* SIGN IN                           */
@@ -461,7 +495,7 @@ const styles = {
         display: "flex",
         alignItems: "center",
         gap: "5px",
-        marginTop: "105px",
+        marginTop: "72px",
         color: "#777777",
         fontSize: "14px"
     },

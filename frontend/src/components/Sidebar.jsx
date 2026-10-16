@@ -9,6 +9,7 @@ import {
     LogOut,
     ChevronUp,
     ShieldCheck,
+    X,
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
@@ -40,7 +41,7 @@ const navigation = [
 ];
 
 
-function Sidebar() {
+function Sidebar({ mobileOpen = false, onClose = () => {} }) {
 
     const navigate = useNavigate();
 
@@ -124,14 +125,28 @@ function Sidebar() {
 
     return (
 
-        <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
+        <>
+            {mobileOpen && (
+                <button
+                    type="button"
+                    aria-label="Close navigation"
+                    onClick={onClose}
+                    className="fixed inset-0 z-30 bg-slate-900/20 md:hidden"
+                />
+            )}
+
+            <aside
+                className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 md:translate-x-0 md:shadow-none ${
+                    mobileOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+            >
 
 
             {/* ================================ */}
             {/* Logo                             */}
             {/* ================================ */}
 
-            <div className="flex h-20 items-center border-b border-slate-200 px-6">
+            <div className="flex h-20 items-center justify-between border-b border-slate-200 px-6">
 
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
 
@@ -142,6 +157,15 @@ function Sidebar() {
                     </span>
 
                 </h1>
+
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:hidden"
+                    aria-label="Close navigation"
+                >
+                    <X size={19} />
+                </button>
 
             </div>
 
@@ -170,6 +194,7 @@ function Sidebar() {
                             <NavLink
                                 key={item.path}
                                 to={item.path}
+                                onClick={onClose}
                                 className={({ isActive }) =>
                                     `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                                         isActive
@@ -203,6 +228,7 @@ function Sidebar() {
 
                         <NavLink
                             to="/admin"
+                            onClick={onClose}
                             className={({ isActive }) =>
                                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                                     isActive
@@ -241,6 +267,7 @@ function Sidebar() {
 
                     <NavLink
                         to="/settings"
+                        onClick={onClose}
                         className={({ isActive }) =>
                             `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                                 isActive
@@ -343,6 +370,7 @@ function Sidebar() {
                             onClick={() => {
 
                                 setProfileOpen(false);
+                                onClose();
 
                                 navigate("/settings");
 
@@ -392,7 +420,8 @@ function Sidebar() {
 
             </div>
 
-        </aside>
+            </aside>
+        </>
 
     );
 }

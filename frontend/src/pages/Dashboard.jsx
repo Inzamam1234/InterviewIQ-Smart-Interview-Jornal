@@ -329,17 +329,35 @@ function Dashboard() {
 
     };
 
+    const hasSavedDraft = Boolean(
+        localStorage.getItem("interviewiq.interviewDraft")
+    );
+
+    const upcomingInterviews = recentInterviews
+        .filter((interview) => {
+            if (!interview.nextRoundDate) {
+                return false;
+            }
+
+            return !["REJECTED", "SELECTED"].includes(interview.status);
+        })
+        .sort(
+            (first, second) =>
+                new Date(first.nextRoundDate) - new Date(second.nextRoundDate)
+        )
+        .slice(0, 2);
+
 
     return (
 
-        <div style={styles.page}>
+        <div className="dashboard-page" style={styles.page}>
 
 
             {/* =================================================
                 HEADER
             ================================================= */}
 
-            <div style={styles.header}>
+            <div className="dashboard-header" style={styles.header}>
 
                 <div>
 
@@ -356,7 +374,7 @@ function Dashboard() {
 
                 {/* SEARCH */}
 
-                <div style={styles.searchBox}>
+                    <div className="dashboard-search" style={styles.searchBox}>
 
                     <span style={styles.searchIcon}>
                         🔍
@@ -383,7 +401,7 @@ function Dashboard() {
                 WELCOME BANNER
             ================================================= */}
 
-            <div style={styles.welcome}>
+            <div className="dashboard-welcome" style={styles.welcome}>
 
                 <div>
 
@@ -392,9 +410,9 @@ function Dashboard() {
                     </h2>
 
                     <p style={styles.welcomeText}>
-                        Keep track of your applications,
-                        interviews, questions, and progress
-                        in one place.
+                        {total === 0
+                            ? "Start with your first interview and keep your preparation in one place."
+                            : "Keep track of your applications, interviews, questions, and progress in one place."}
                     </p>
 
                 </div>
@@ -403,20 +421,61 @@ function Dashboard() {
                 <button
                     style={styles.welcomeButton}
                     onClick={() =>
-                        navigate("/interviews")
+                        navigate("/interviews/new")
                     }
                 >
-                    View Interviews →
+                    {total === 0 ? "Add your first interview" : "Add interview"} →
                 </button>
 
             </div>
 
 
             {/* =================================================
+                FIRST-TIME ONBOARDING
+            ================================================= */}
+
+            {total === 0 && (
+                <div style={styles.onboardingPanel}>
+
+                    <div style={styles.panelHeader}>
+                        <h3 style={styles.panelTitle}>
+                            Get started in three steps
+                        </h3>
+
+                        <p style={styles.panelSubtitle}>
+                            Build a simple habit around every interview.
+                        </p>
+                    </div>
+
+                    <div className="dashboard-onboarding-grid" style={styles.onboardingGrid}>
+                        <OnboardingStep
+                            number="1"
+                            title="Add an interview"
+                            description="Track the company, role, round, and status."
+                            onClick={() => navigate("/interviews/new")}
+                        />
+                        <OnboardingStep
+                            number="2"
+                            title="Practice questions"
+                            description="Save questions you were asked and review them later."
+                            onClick={() => navigate("/questions")}
+                        />
+                        <OnboardingStep
+                            number="3"
+                            title="Reflect afterwards"
+                            description="Capture lessons learned while they are still fresh."
+                            onClick={() => navigate("/journal")}
+                        />
+                    </div>
+                </div>
+            )}
+
+
+            {/* =================================================
                 STAT CARDS
             ================================================= */}
 
-            <div style={styles.stats}>
+            <div className="dashboard-stats" style={styles.stats}>
 
 
                 {/* TOTAL */}
@@ -467,10 +526,60 @@ function Dashboard() {
 
 
             {/* =================================================
+                NEXT ACTIONS
+            ================================================= */}
+
+            {(total > 0 || hasSavedDraft) && (
+                <div style={styles.nextActionsPanel}>
+
+                    <div style={styles.panelHeader}>
+                        <h3 style={styles.panelTitle}>
+                            Next actions
+                        </h3>
+
+                        <p style={styles.panelSubtitle}>
+                            Keep your interview preparation moving forward.
+                        </p>
+                    </div>
+
+                    <div className="dashboard-next-action-list" style={styles.nextActionList}>
+                        {hasSavedDraft && (
+                            <NextAction
+                                title="Continue your saved draft"
+                                description="Pick up where you left off."
+                                buttonLabel="Resume draft"
+                                onClick={() => navigate("/interviews/new")}
+                            />
+                        )}
+
+                        {upcomingInterviews.map((interview) => (
+                            <NextAction
+                                key={interview.id}
+                                title={`${interview.companyName} · ${interview.role}`}
+                                description={`Next round: ${formatDate(interview.nextRoundDate)}`}
+                                buttonLabel="View interview"
+                                onClick={() => navigate(`/interviews/${interview.id}`)}
+                            />
+                        ))}
+
+                        {!hasSavedDraft && upcomingInterviews.length === 0 && (
+                            <NextAction
+                                title="Add your next interview"
+                                description="Keep your pipeline and preparation in one place."
+                                buttonLabel="Add interview"
+                                onClick={() => navigate("/interviews/new")}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+
+
+            {/* =================================================
                 MAIN GRID
             ================================================= */}
 
-            <div style={styles.mainGrid}>
+            <div className="dashboard-main-grid" style={styles.mainGrid}>
 
 
                 {/* =================================================
@@ -768,17 +877,43 @@ function Dashboard() {
 
                 {/* SEARCH RESULT EMPTY */}
 
-                {filteredInterviews.length === 0 && (
+                    {filteredInterviews.length === 0 && (
 
                     <div style={styles.noResults}>
 
                         <div style={styles.noResultsIcon}>
-                            🔍
+                            {recentInterviews.length === 0 ? "✦" : "🔍"}
                         </div>
 
-                        <p>
-                            No interviews found.
+                        <h4 style={styles.emptyStateTitle}>
+                            {recentInterviews.length === 0
+                                ? "Your interview tracker is ready"
+                                : "No matching interviews"}
+                        </h4>
+
+                        <p style={styles.emptyStateText}>
+                            {recentInterviews.length === 0
+                                ? "Add your first application to start tracking rounds, questions, and reflections."
+                                : "Try a different company, role, or status."}
                         </p>
+
+                        {recentInterviews.length === 0 ? (
+                            <button
+                                type="button"
+                                style={styles.emptyStateButton}
+                                onClick={() => navigate("/interviews/new")}
+                            >
+                                Add interview
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                style={styles.emptyStateButton}
+                                onClick={() => setSearch("")}
+                            >
+                                Clear search
+                            </button>
+                        )}
 
                     </div>
 
@@ -989,6 +1124,45 @@ function ProgressRow({
 }
 
 
+function OnboardingStep({ number, title, description, onClick }) {
+
+    return (
+        <button
+            type="button"
+            style={styles.onboardingStep}
+            onClick={onClick}
+        >
+            <span style={styles.stepNumber}>{number}</span>
+            <span style={styles.onboardingContent}>
+                <strong style={styles.onboardingTitle}>{title}</strong>
+                <span style={styles.onboardingDescription}>{description}</span>
+            </span>
+            <span style={styles.stepArrow}>→</span>
+        </button>
+    );
+}
+
+
+function NextAction({ title, description, buttonLabel, onClick }) {
+
+    return (
+        <div style={styles.nextActionItem}>
+            <div style={styles.nextActionText}>
+                <strong style={styles.nextActionTitle}>{title}</strong>
+                <span style={styles.nextActionDescription}>{description}</span>
+            </div>
+            <button
+                type="button"
+                style={styles.nextActionButton}
+                onClick={onClick}
+            >
+                {buttonLabel}
+            </button>
+        </div>
+    );
+}
+
+
 // =========================================================
 // STYLES
 // =========================================================
@@ -1100,6 +1274,175 @@ const styles = {
         background: "#ffffff",
         color: "#4f46e5",
         fontSize: "14px",
+        fontWeight: "600",
+        cursor: "pointer"
+    },
+
+
+    onboardingPanel: {
+        background: "#ffffff",
+        border: "1px solid #e5e7eb",
+        borderRadius: "16px",
+        padding: "26px",
+        marginBottom: "24px"
+    },
+
+
+    onboardingGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gap: "12px"
+    },
+
+
+    onboardingStep: {
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "12px",
+        width: "100%",
+        minHeight: "120px",
+        padding: "16px",
+        border: "1px solid #e5e7eb",
+        borderRadius: "12px",
+        background: "#ffffff",
+        color: "#111827",
+        textAlign: "left",
+        cursor: "pointer",
+        transition: "border-color 0.2s ease, background 0.2s ease"
+    },
+
+
+    stepNumber: {
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "28px",
+        height: "28px",
+        flexShrink: 0,
+        borderRadius: "999px",
+        background: "#ede9fe",
+        color: "#6d28d9",
+        fontSize: "13px",
+        fontWeight: "700"
+    },
+
+
+    onboardingContent: {
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+        gap: "6px"
+    },
+
+
+    onboardingTitle: {
+        fontSize: "14px",
+        fontWeight: "700"
+    },
+
+
+    onboardingDescription: {
+        color: "#6b7280",
+        fontSize: "12px",
+        lineHeight: "1.45"
+    },
+
+
+    stepArrow: {
+        color: "#7c3aed",
+        fontSize: "16px",
+        fontWeight: "700"
+    },
+
+
+    nextActionsPanel: {
+        background: "#ffffff",
+        border: "1px solid #e5e7eb",
+        borderRadius: "16px",
+        padding: "26px",
+        marginBottom: "24px"
+    },
+
+
+    nextActionList: {
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gap: "12px"
+    },
+
+
+    nextActionItem: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "16px",
+        padding: "16px",
+        border: "1px solid #e5e7eb",
+        borderRadius: "12px",
+        background: "#fafafa"
+    },
+
+
+    nextActionText: {
+        display: "flex",
+        minWidth: 0,
+        flexDirection: "column",
+        gap: "5px"
+    },
+
+
+    nextActionTitle: {
+        overflow: "hidden",
+        color: "#111827",
+        fontSize: "14px",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+    },
+
+
+    nextActionDescription: {
+        color: "#6b7280",
+        fontSize: "12px"
+    },
+
+
+    nextActionButton: {
+        flexShrink: 0,
+        border: "none",
+        borderRadius: "8px",
+        padding: "9px 12px",
+        background: "#ede9fe",
+        color: "#6d28d9",
+        fontSize: "12px",
+        fontWeight: "700",
+        cursor: "pointer"
+    },
+
+
+    emptyStateTitle: {
+        margin: "0 0 7px",
+        color: "#111827",
+        fontSize: "16px",
+        fontWeight: "700"
+    },
+
+
+    emptyStateText: {
+        maxWidth: "440px",
+        margin: "0 auto 16px",
+        color: "#6b7280",
+        fontSize: "13px",
+        lineHeight: "1.5"
+    },
+
+
+    emptyStateButton: {
+        border: "none",
+        borderRadius: "9px",
+        padding: "10px 16px",
+        background: "#4f46e5",
+        color: "#ffffff",
+        fontSize: "13px",
         fontWeight: "600",
         cursor: "pointer"
     },

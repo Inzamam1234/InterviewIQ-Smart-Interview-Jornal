@@ -78,6 +78,11 @@ api.interceptors.response.use(
             // Remove invalid JWT
             localStorage.removeItem("token");
 
+            sessionStorage.setItem(
+                "interviewiq.sessionExpired",
+                "true"
+            );
+
             // Redirect to login
             window.location.href = "/login";
 

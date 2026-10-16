@@ -1,4 +1,96 @@
 @import "tailwindcss";
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 320px;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    background: #f8f9fc;
+    color: #111827;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(124, 58, 237, 0.35);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .dashboard-main-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .dashboard-onboarding-grid,
+    .dashboard-next-action-list {
+        grid-template-columns: 1fr !important;
+    }
+
+    .dashboard-header {
+        align-items: stretch !important;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .dashboard-search {
+        width: 100% !important;
+    }
+
+    .dashboard-welcome {
+        align-items: flex-start !important;
+        flex-direction: column;
+        gap: 18px;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-page,
+    .interview-form-page {
+        padding: 24px 16px 40px !important;
+    }
+
+    .dashboard-stats {
+        gap: 12px !important;
+    }
+
+    .dashboard-welcome {
+        padding: 24px !important;
+    }
+
+    .dashboard-next-action-list {
+        gap: 10px !important;
+    }
+
+    .dashboard-next-action-list > div {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .interview-form-row {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+    }
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);

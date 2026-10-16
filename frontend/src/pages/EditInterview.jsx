@@ -1,7 +1,35 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
+import { toast } from "react-hot-toast";
 import api from "../api/axios";
+
+const INTERVIEW_DRAFT_KEY = "interviewiq.interviewDraft";
+
+const EMPTY_INTERVIEW_FORM = {
+    companyName: "",
+    role: "",
+    applicationDate: "",
+    currentRound: "",
+    nextRoundDate: "",
+    overallFeedback: "",
+    status: "APPLIED"
+};
+
+function readInterviewDraft() {
+
+    const savedDraft = localStorage.getItem(INTERVIEW_DRAFT_KEY);
+
+    if (!savedDraft) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(savedDraft);
+    } catch {
+        return null;
+    }
+}
 
 function EditInterview() {
 
@@ -10,19 +38,79 @@ function EditInterview() {
     const navigate = useNavigate();
     const isNew = id === "new" || location.pathname === "/interviews/new";
 
-    const [form, setForm] = useState({
-        companyName: "",
-        role: "",
-        applicationDate: "",
-        currentRound: "",
-        nextRoundDate: "",
-        overallFeedback: "",
-        status: "APPLIED"
-    });
+    const [form, setForm] = useState(() => ({
+        ...EMPTY_INTERVIEW_FORM,
+        ...(isNew ? readInterviewDraft() || {} : {})
+    }));
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!isNew);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
+    const [draftRestored] = useState(
+        () => isNew && Boolean(readInterviewDraft())
+    );
+    const [draftStatus, setDraftStatus] = useState(
+        () => isNew && Boolean(readInterviewDraft())
+            ? "Draft restored from this device."
+            : ""
+    );
+
+    const hasDraftContent = Boolean(
+        form.companyName.trim() ||
+        form.role.trim() ||
+        form.applicationDate ||
+        form.currentRound.trim() ||
+        form.nextRoundDate ||
+        form.overallFeedback.trim()
+    );
+
+
+    /* -------------------------------- */
+    /* Autosave new interview drafts    */
+    /* -------------------------------- */
+
+    useEffect(() => {
+
+        if (!isNew || loading || !hasDraftContent) {
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            localStorage.setItem(
+                INTERVIEW_DRAFT_KEY,
+                JSON.stringify(form)
+            );
+            setDraftStatus("Draft saved locally.");
+        }, 500);
+
+        return () => window.clearTimeout(timer);
+
+    }, [form, hasDraftContent, isNew, loading]);
+
+
+    /* -------------------------------- */
+    /* Warn before browser navigation    */
+    /* -------------------------------- */
+
+    useEffect(() => {
+
+        if (!isNew || !hasDraftContent) {
+            return;
+        }
+
+        const warnBeforeLeaving = (event) => {
+            event.preventDefault();
+            event.returnValue = "";
+        };
+
+        window.addEventListener("beforeunload", warnBeforeLeaving);
+
+        return () => window.removeEventListener(
+            "beforeunload",
+            warnBeforeLeaving
+        );
+
+    }, [hasDraftContent, isNew]);
 
 
     /* -------------------------------- */
@@ -117,7 +205,24 @@ function EditInterview() {
             ...prev,
             [name]: value
         }));
+        setDraftStatus("Saving draft...");
 
+    };
+
+
+    const handleCancel = () => {
+
+        if (
+            isNew &&
+            hasDraftContent &&
+            !window.confirm(
+                "Leave this form? Your draft will remain saved on this device."
+            )
+        ) {
+            return;
+        }
+
+        navigate(isNew ? "/interviews" : `/interviews/${id}`);
     };
 
 
@@ -129,14 +234,46 @@ function EditInterview() {
 
         e.preventDefault();
 
+        if (!form.companyName.trim() || !form.role.trim()) {
+            setError("Please enter both the company name and role.");
+            return;
+        }
+
+        if (
+            form.applicationDate &&
+            form.nextRoundDate &&
+            form.nextRoundDate < form.applicationDate
+        ) {
+            setError("The next round date cannot be before the application date.");
+            return;
+        }
+
         setSaving(true);
         setError("");
+
+        const payload = {
+            ...form,
+            companyName: form.companyName.trim(),
+            role: form.role.trim(),
+            currentRound: form.currentRound.trim(),
+            overallFeedback: form.overallFeedback.trim()
+        };
 
         try {
 
             const response = isNew
-                ? await api.post("/interviews", form)
-                : await api.put(`/interviews/${id}`, form);
+                ? await api.post("/interviews", payload)
+                : await api.put(`/interviews/${id}`, payload);
+
+            if (isNew) {
+                localStorage.removeItem(INTERVIEW_DRAFT_KEY);
+            }
+
+            toast.success(
+                isNew
+                    ? "Interview created successfully."
+                    : "Interview changes saved."
+            );
 
             navigate(`/interviews/${isNew ? response.data.id : id}`);
 
@@ -147,25 +284,24 @@ function EditInterview() {
                 error
             );
 
+            let message;
+
             if (error.response?.status === 403) {
 
-                setError(
-                    "You do not have permission to update this interview."
-                );
+                message = "You do not have permission to update this interview.";
 
             } else if (error.response?.status === 404) {
 
-                setError(
-                    "Interview not found."
-                );
+                message = "Interview not found.";
 
             } else {
 
-                setError(
-                    "Failed to update interview. Please try again."
-                );
+                message = "Failed to update interview. Please try again.";
 
             }
+
+            setError(message);
+            toast.error(message);
 
         } finally {
 
@@ -235,7 +371,7 @@ function EditInterview() {
 
     return (
 
-        <div style={styles.page}>
+        <div className="interview-form-page" style={styles.page}>
 
             {/* ================================ */}
             {/* Back                            */}
@@ -243,9 +379,7 @@ function EditInterview() {
 
             <button
                 style={styles.backButton}
-                onClick={() =>
-                    navigate(isNew ? "/interviews" : `/interviews/${id}`)
-                }
+                onClick={handleCancel}
             >
 
                 <ArrowLeft size={16} />
@@ -272,6 +406,12 @@ function EditInterview() {
                             ? "Record a new interview and track your progress."
                             : "Update your interview information and keep your progress up to date."}
                     </p>
+
+                    {isNew && (draftRestored || draftStatus) && (
+                        <p style={styles.draftStatus} role="status">
+                            {draftStatus || "Draft saved locally."}
+                        </p>
+                    )}
 
                 </div>
 
@@ -329,7 +469,7 @@ function EditInterview() {
 
                 {/* Dates */}
 
-                <div style={styles.row}>
+                <div className="interview-form-row" style={styles.row}>
 
                     <div style={styles.field}>
 
@@ -464,9 +604,7 @@ function EditInterview() {
                     <button
                         type="button"
                         style={styles.cancelButton}
-                        onClick={() =>
-                            navigate(isNew ? "/interviews" : `/interviews/${id}`)
-                        }
+                        onClick={handleCancel}
                         disabled={saving}
                     >
                         Cancel
@@ -607,6 +745,14 @@ const styles = {
         color: "#6b7280",
         fontSize: "15px",
         lineHeight: "1.5"
+    },
+
+
+    draftStatus: {
+        margin: "10px 0 0",
+        color: "#047857",
+        fontSize: "13px",
+        fontWeight: "550"
     },
 
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import api from "../api/axios";
 
 function Register() {
@@ -8,10 +9,17 @@ function Register() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError("");
+
+        if (form.password.length < 8) {
+            setError("Password must be at least 8 characters.");
+            return;
+        }
 
         if (form.password !== confirmPassword) {
             setError("Passwords do not match.");
@@ -21,8 +29,18 @@ function Register() {
         setLoading(true);
 
         try {
-            await api.post("/auth/register", form);
-            navigate("/login", { replace: true });
+            await api.post("/auth/register", {
+                ...form,
+                name: form.name.trim(),
+                email: form.email.trim().toLowerCase()
+            });
+            navigate("/login", {
+                replace: true,
+                state: {
+                    registered: true,
+                    email: form.email.trim().toLowerCase()
+                }
+            });
         } catch (requestError) {
             setError(
                 requestError.response?.data?.message ||
@@ -73,27 +91,59 @@ function Register() {
                         required
                         className="h-14 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
                     />
-                    <input
-                        name="password"
-                        type="password"
-                        value={form.password}
-                        onChange={updateField}
-                        placeholder="Password (8+ characters)"
-                        autoComplete="new-password"
-                        minLength={8}
-                        required
-                        className="h-14 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-                    />
-                    <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(event) => setConfirmPassword(event.target.value)}
-                        placeholder="Confirm password"
-                        autoComplete="new-password"
-                        minLength={8}
-                        required
-                        className="h-14 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-                    />
+                    <div className="relative">
+                        <input
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            value={form.password}
+                            onChange={updateField}
+                            placeholder="Password (8+ characters)"
+                            autoComplete="new-password"
+                            minLength={8}
+                            required
+                            aria-label="Password"
+                            className="h-14 w-full rounded-lg border border-slate-300 px-4 pr-14 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((visible) => !visible)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-2 text-slate-500 hover:text-violet-700"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+                    <p className="-mt-2 text-xs text-slate-500">
+                        Use at least 8 characters so your account stays secure.
+                    </p>
+                    <div className="relative">
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(event) => setConfirmPassword(event.target.value)}
+                            placeholder="Confirm password"
+                            autoComplete="new-password"
+                            minLength={8}
+                            required
+                            aria-label="Confirm password"
+                            aria-invalid={Boolean(confirmPassword && form.password !== confirmPassword)}
+                            className="h-14 w-full rounded-lg border border-slate-300 px-4 pr-14 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword((visible) => !visible)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-2 text-slate-500 hover:text-violet-700"
+                            aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"}
+                        >
+                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+
+                    {confirmPassword && form.password !== confirmPassword && (
+                        <p className="-mt-2 text-xs text-red-600" role="alert">
+                            Passwords do not match yet.
+                        </p>
+                    )}
 
                     {error && <p className="text-sm text-red-600">{error}</p>}
 
