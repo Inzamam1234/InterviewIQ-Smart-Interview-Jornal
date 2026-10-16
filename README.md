@@ -20,17 +20,11 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 - Authentication: JWT with JJWT and BCrypt
 - Database: PostgreSQL
 - API documentation: Springdoc OpenAPI / Swagger UI
-- Deployment: Docker Compose with PostgreSQL, Spring Boot, and Nginx
+- Deployment: Docker Compose with PostgreSQL, Spring Boot, and Nginx; Render and Neon free tiers for the current hosted deployment
 
 ## Repository audit
 
-The repository currently has three commits on `main`:
-
-1. `b1a9d0d` — Initial InterviewIQ implementation
-2. `6d37b82` — Add professional project README
-3. `4926b82` — Update README with project overview
-
-The working tree was clean at the start of the audit. Existing application and database records are not modified by the application startup configuration beyond Hibernate's existing `update` behavior.
+The deployment work is on the `codex/deployment` branch. The deployment preparation commit is `c0f99e4` (`Prepare InterviewIQ for deployment`). Existing application and database records are not modified by the application startup configuration beyond Hibernate's existing `update` behavior.
 
 ## Configuration and secrets
 
@@ -53,6 +47,20 @@ openssl rand -base64 32
 ```
 
 For a production database, keep a backup and introduce a versioned migration process before changing `JPA_DDL_AUTO` to `validate`. Do not use `docker compose down -v`; the named PostgreSQL volume is the persistent application data store.
+
+## Current hosted deployment
+
+The current no-cost hosted deployment uses Render for the frontend and Spring Boot API, and Neon for PostgreSQL:
+
+- Frontend: https://interviewiq-frontend-lcsp.onrender.com
+- Backend: https://interviewiq-api-ggbi.onrender.com
+- Database: Neon project `interviewiq-production`, Singapore region, free plan
+
+Render keeps the backend on its free instance, which can sleep after inactivity. The first request after sleep may take approximately 50 seconds or more. Secrets are stored as private Render environment variables and are not committed to this repository. The frontend API URL is configured at build time through `VITE_API_URL`; the backend CORS setting must contain the exact frontend HTTPS origin.
+
+The hosted Neon database was created as a fresh production database and its schema was initialized by Hibernate with `JPA_DDL_AUTO=update`. Existing local PostgreSQL records have not been copied automatically. Before importing existing records, create and verify a backup, then use an explicit export/import or versioned migration process.
+
+To add features after deployment, make the change on a branch, run the frontend and backend checks below, push the branch configured in Render, and trigger a new deploy. Keep database changes backward-compatible and migrate production data deliberately.
 
 ## Run locally without containers
 
@@ -124,7 +132,7 @@ This repository includes a no-cost, self-hosted deployment definition. It runs P
    docker compose down
    ```
 
-The current workspace did not have a running Docker daemon, so the Compose deployment definition was validated statically but not started here. No paid service was selected or provisioned. Publishing to a cloud provider requires a provider choice and credentials; those should be supplied before any external deployment.
+The Compose definition remains available for local or self-hosted deployment. The hosted Render/Neon deployment is separate and does not replace the Compose workflow.
 
 ## Testing
 
@@ -154,6 +162,8 @@ The Spring context test uses an isolated H2 test profile, so it does not require
 - user deletion when no interviews are owned.
 
 The frontend browser smoke test verified that `/register` renders and its sign-in action reaches `/login`.
+
+The hosted smoke test verified that the Render frontend serves the login page, the signup screen opens, the browser reports no frontend console errors, and the Render backend starts successfully with a connection to Neon PostgreSQL. Full authenticated user and admin actions require credentials for an account in the hosted database and should be exercised without sharing passwords in source control or chat.
 
 ## API access rules
 
