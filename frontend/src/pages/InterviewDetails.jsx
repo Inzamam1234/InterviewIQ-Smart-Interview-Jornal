@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { getApiErrorMessage } from "../api/errorMessage";
+import InterviewProgressStepper from "../components/InterviewProgressStepper";
 
 function InterviewDetails() {
 
@@ -589,6 +590,35 @@ function InterviewDetails() {
                         interview.status
                     )}
                 </span>
+
+            </div>
+
+
+            {/* Quick progress update */}
+
+            <div style={styles.card}>
+
+                <div style={styles.sectionHeader}>
+
+                    <div>
+
+                        <h2 style={styles.cardTitle}>
+                            Current progress
+                        </h2>
+
+                        <p style={styles.sectionDescription}>
+                            Click a stage to update the current round instantly.
+                            Use Edit Interview for dates, notes, and other details.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <InterviewProgressStepper
+                    interview={interview}
+                    onUpdated={setInterview}
+                />
 
             </div>
 
