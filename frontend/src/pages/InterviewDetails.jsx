@@ -34,6 +34,8 @@ function InterviewDetails() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [nextRoundDate, setNextRoundDate] = useState("");
+    const [savingNextRoundDate, setSavingNextRoundDate] = useState(false);
 
     /* -------------------------------- */
     /* Question Modal                   */
@@ -82,6 +84,7 @@ function InterviewDetails() {
                 const response = await api.get(`/interviews/${id}`);
 
                 setInterview(response.data);
+                setNextRoundDate(toDateInputValue(response.data.nextRoundDate));
 
             } catch (error) {
 
@@ -114,6 +117,63 @@ function InterviewDetails() {
         fetchInterview();
 
     }, [id]);
+
+
+    /* -------------------------------- */
+    /* Quick interview updates          */
+    /* -------------------------------- */
+
+    const handleInterviewUpdated = (updatedInterview) => {
+
+        setInterview(updatedInterview);
+        setNextRoundDate(toDateInputValue(updatedInterview.nextRoundDate));
+
+    };
+
+
+    const handleSaveNextRoundDate = async () => {
+
+        const applicationDate = toDateInputValue(interview.applicationDate);
+
+        if (
+            nextRoundDate &&
+            applicationDate &&
+            nextRoundDate < applicationDate
+        ) {
+            toast.error("The next round date cannot be before the application date.");
+            return;
+        }
+
+        setSavingNextRoundDate(true);
+
+        try {
+
+            const response = await api.put(`/interviews/${id}`, {
+                companyName: interview.companyName,
+                role: interview.role,
+                applicationDate: interview.applicationDate || "",
+                currentRound: interview.currentRound || "",
+                nextRoundDate: nextRoundDate || "",
+                overallFeedback: interview.overallFeedback || "",
+                status: interview.status
+            });
+
+            handleInterviewUpdated(response.data);
+            toast.success("Next round date saved.");
+
+        } catch (error) {
+
+            toast.error(
+                getApiErrorMessage(error, "Unable to save the next round date.")
+            );
+
+        } finally {
+
+            setSavingNextRoundDate(false);
+
+        }
+
+    };
 
 
     /* -------------------------------- */
@@ -617,8 +677,69 @@ function InterviewDetails() {
 
                 <InterviewProgressStepper
                     interview={interview}
-                    onUpdated={setInterview}
+                    onUpdated={handleInterviewUpdated}
                 />
+
+            </div>
+
+
+            {/* Quick next-round date update */}
+
+            <div style={styles.card}>
+
+                <div style={styles.sectionHeader}>
+
+                    <div>
+
+                        <h2 style={styles.cardTitle}>
+                            Next round date
+                        </h2>
+
+                        <p style={styles.sectionDescription}>
+                            Set or change the next interview date without opening the full editor.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div style={styles.quickEditRow}>
+
+                    <label
+                        htmlFor="next-round-date"
+                        style={styles.quickEditLabel}
+                    >
+                        Next interview date
+                    </label>
+
+                    <input
+                        id="next-round-date"
+                        type="date"
+                        value={nextRoundDate}
+                        onChange={(event) =>
+                            setNextRoundDate(event.target.value)
+                        }
+                        style={styles.quickDateInput}
+                        disabled={savingNextRoundDate}
+                    />
+
+                    <button
+                        type="button"
+                        style={styles.quickSaveButton}
+                        onClick={handleSaveNextRoundDate}
+                        disabled={
+                            savingNextRoundDate ||
+                            nextRoundDate === toDateInputValue(interview.nextRoundDate)
+                        }
+                    >
+                        {savingNextRoundDate ? "Saving..." : "Save date"}
+                    </button>
+
+                </div>
+
+                <p style={styles.quickEditHint}>
+                    Leave the date blank and save to remove it.
+                </p>
 
             </div>
 
@@ -1851,6 +1972,13 @@ function DetailItem({ label, value }) {
 /* Format Date                       */
 /* ================================= */
 
+function toDateInputValue(date) {
+
+    return date ? String(date).slice(0, 10) : "";
+
+}
+
+
 function formatDate(date) {
 
     if (!date) {
@@ -2105,6 +2233,52 @@ const styles = {
         margin: "7px 0 0",
         color: "#6b7280",
         fontSize: "13px"
+    },
+
+
+    quickEditRow: {
+        display: "flex",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: "12px"
+    },
+
+
+    quickEditLabel: {
+        color: "#374151",
+        fontSize: "13px",
+        fontWeight: "600"
+    },
+
+
+    quickDateInput: {
+        minWidth: "180px",
+        padding: "10px 12px",
+        border: "1px solid #d1d5db",
+        borderRadius: "9px",
+        background: "#ffffff",
+        color: "#111827",
+        fontSize: "14px",
+        fontFamily: "inherit"
+    },
+
+
+    quickSaveButton: {
+        padding: "10px 15px",
+        borderRadius: "9px",
+        border: "none",
+        background: "#4f46e5",
+        color: "#ffffff",
+        fontSize: "13px",
+        fontWeight: "600",
+        cursor: "pointer"
+    },
+
+
+    quickEditHint: {
+        margin: "10px 0 0",
+        color: "#9ca3af",
+        fontSize: "12px"
     },
 
 
