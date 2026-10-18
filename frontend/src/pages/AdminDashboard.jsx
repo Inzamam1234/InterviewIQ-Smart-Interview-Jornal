@@ -12,8 +12,10 @@ import {
     X,
     AlertTriangle,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 
 function AdminDashboard() {
@@ -113,12 +115,6 @@ function AdminDashboard() {
 
             } catch (error) {
 
-                console.error(
-                    "Failed to load admin dashboard:",
-                    error
-                );
-
-
                 if (error.response?.status === 401) {
 
                     setError(
@@ -167,12 +163,7 @@ function AdminDashboard() {
             setUsers(response.data);
 
         } catch (error) {
-
-            console.error(
-                "Failed to refresh users:",
-                error
-            );
-
+            toast.error(getApiErrorMessage(error, "Failed to refresh users."));
         }
 
     };
@@ -322,19 +313,12 @@ function AdminDashboard() {
 
             setSelectedUser(null);
 
+            toast.success("User role updated.");
+
 
         } catch (error) {
 
-            console.error(
-                "Failed to change user role:",
-                error
-            );
-
-
-            alert(
-                error.response?.data?.message ||
-                "Failed to change user role."
-            );
+            toast.error(getApiErrorMessage(error, "Failed to change user role."));
 
         } finally {
 
@@ -360,7 +344,7 @@ function AdminDashboard() {
             currentUser.id === user.id
         ) {
 
-            alert(
+            toast.error(
                 "You cannot delete your own account."
             );
 
@@ -420,22 +404,12 @@ function AdminDashboard() {
 
             setDeletingUser(null);
 
+            toast.success("User deleted.");
+
 
         } catch (error) {
 
-            console.error(
-                "Failed to delete user:",
-                error
-            );
-
-
-            const message =
-                error.response?.data?.message ||
-                error.response?.data ||
-                "Failed to delete user.";
-
-
-            alert(message);
+            toast.error(getApiErrorMessage(error, "Failed to delete user."));
 
         } finally {
 

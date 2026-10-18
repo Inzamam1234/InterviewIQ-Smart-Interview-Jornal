@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 function Register() {
     const navigate = useNavigate();
@@ -9,6 +10,7 @@ function Register() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [slowRequest, setSlowRequest] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -27,6 +29,12 @@ function Register() {
         }
 
         setLoading(true);
+        setSlowRequest(false);
+
+        const slowRequestTimer = window.setTimeout(
+            () => setSlowRequest(true),
+            5000
+        );
 
         try {
             await api.post("/auth/register", {
@@ -43,11 +51,15 @@ function Register() {
             });
         } catch (requestError) {
             setError(
-                requestError.response?.data?.message ||
-                "Unable to create your account. Please try again."
+                getApiErrorMessage(
+                    requestError,
+                    "Unable to create your account. Please try again."
+                )
             );
         } finally {
+            window.clearTimeout(slowRequestTimer);
             setLoading(false);
+            setSlowRequest(false);
         }
     };
 
@@ -145,7 +157,17 @@ function Register() {
                         </p>
                     )}
 
-                    {error && <p className="text-sm text-red-600">{error}</p>}
+                    {error && (
+                        <p className="text-sm text-red-600" role="alert" aria-live="assertive">
+                            {error}
+                        </p>
+                    )}
+
+                    {slowRequest && !error && (
+                        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" role="status" aria-live="polite">
+                            The server is waking up. This first request can take a little longer.
+                        </p>
+                    )}
 
                     <button
                         type="submit"

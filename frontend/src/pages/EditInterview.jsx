@@ -157,11 +157,6 @@ function EditInterview() {
 
             } catch (error) {
 
-                console.error(
-                    "Failed to load interview:",
-                    error
-                );
-
                 if (error.response?.status === 403) {
 
                     setError(
@@ -278,11 +273,6 @@ function EditInterview() {
             navigate(`/interviews/${isNew ? response.data.id : id}`);
 
         } catch (error) {
-
-            console.error(
-                "Update interview error:",
-                error
-            );
 
             let message;
 

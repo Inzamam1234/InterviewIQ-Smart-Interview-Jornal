@@ -11,7 +11,9 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 - View user-scoped dashboard statistics.
 - Follow a guided first-time onboarding flow with dashboard next actions.
 - Save new interview drafts locally and resume them after leaving the form.
+- Quickly add an interview with only the company, role, date, and current stage, then advance its progress from the dashboard or interview list.
 - Use responsive mobile navigation, client-side validation, accessible focus states, and clear success/error feedback.
+- Use consistent inline/toast feedback instead of browser-native alerts, including helpful messages when a hosted backend is waking up.
 - Register and sign in with BCrypt-hashed passwords and JWT sessions.
 - Use admin-only dashboards and user management with role-based access control.
 - Enforce interview ownership for normal users; admins can manage all interviews.
@@ -166,9 +168,13 @@ The Spring context test uses an isolated H2 test profile, so it does not require
 - interview deletion with child question/journal records;
 - user deletion when no interviews are owned.
 
-The frontend browser smoke test verified that `/register` renders, password mismatch validation appears before submission, password visibility controls work, and its sign-in action reaches `/login`.
+The frontend browser smoke test verified that `/register` renders, password mismatch validation appears before submission, password visibility controls work, and its sign-in action reaches `/login`. The local frontend also verifies that a slow hosted API request displays a server-wake-up status and a friendly retry message after timeout.
+
+Frontend production checks currently pass with `npm run lint` and `npm run build`. Backend tests use the isolated H2 profile; the test resources select Mockito's subclass mock maker so the suite remains runnable on JDKs that restrict dynamic agent attachment.
 
 The hosted smoke test verified that the Render frontend serves the login page, the signup screen opens, the browser reports no frontend console errors, the backend starts successfully with a connection to Neon PostgreSQL, a synthetic account can register and log in, and an authenticated session can load the dashboard. Full admin actions require an admin account in the hosted database and should be exercised without sharing passwords in source control or chat.
+
+The quick-add workflow keeps the existing full interview form available for detailed records. The dashboard and interview list provide one-click progress updates for Applied, Screening, Technical, HR, and Offer; each update preserves the existing interview notes and dates.
 
 ## API access rules
 

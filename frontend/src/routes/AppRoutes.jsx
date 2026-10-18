@@ -61,12 +61,7 @@ function AdminRoute({ children }) {
 
                 setUser(response.data);
 
-            } catch (error) {
-
-                console.error(
-                    "Failed to verify admin access:",
-                    error
-                );
+            } catch {
 
                 setUser(null);
 

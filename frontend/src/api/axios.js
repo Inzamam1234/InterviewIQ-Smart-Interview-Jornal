@@ -5,6 +5,8 @@ const baseURL =
 
 const api = axios.create({
     baseURL: baseURL.replace(/\/$/, ""),
+    // Render's free service may need time to wake before answering the first request.
+    timeout: 90_000,
     headers: {
         "Content-Type": "application/json",
     },
@@ -70,11 +72,8 @@ api.interceptors.response.use(
 
         if (
             status === 401 &&
-            !error.config?.url?.includes("/auth/login")
+            !error.config?.url?.includes("/auth/")
         ) {
-
-            console.log("Session expired. Redirecting to login...");
-
             // Remove invalid JWT
             localStorage.removeItem("token");
 

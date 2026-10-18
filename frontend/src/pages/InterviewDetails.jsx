@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 function InterviewDetails() {
 
@@ -78,19 +80,9 @@ function InterviewDetails() {
 
                 const response = await api.get(`/interviews/${id}`);
 
-                console.log(
-                    "Interview details:",
-                    response.data
-                );
-
                 setInterview(response.data);
 
             } catch (error) {
-
-                console.error(
-                    "Interview details error:",
-                    error
-                );
 
                 if (error.response?.status === 403) {
 
@@ -140,19 +132,9 @@ function InterviewDetails() {
                     `/interviews/${id}/questions`
                 );
 
-                console.log(
-                    "Interview questions:",
-                    response.data
-                );
-
                 setQuestions(response.data);
 
             } catch (error) {
-
-                console.error(
-                    "Questions error:",
-                    error
-                );
 
                 if (error.response?.status === 403) {
 
@@ -198,19 +180,9 @@ function InterviewDetails() {
                     `/interviews/${id}/journal-entries`
                 );
 
-                console.log(
-                    "Interview journal:",
-                    response.data
-                );
-
                 setJournalEntries(response.data);
 
             } catch (error) {
-
-                console.error(
-                    "Journal error:",
-                    error
-                );
 
                 if (error.response?.status === 403) {
 
@@ -257,32 +229,23 @@ function InterviewDetails() {
 
             await api.delete(`/interviews/${id}`);
 
-            console.log(
-                "Interview deleted successfully"
-            );
-
             navigate("/interviews");
 
         } catch (error) {
 
-            console.error(
-                "Delete interview error:",
-                error
-            );
-
             if (error.response?.status === 403) {
 
-                alert(
+                toast.error(
                     "You do not have permission to delete this interview."
                 );
 
             } else if (error.response?.status === 404) {
 
-                alert("Interview not found.");
+                toast.error("Interview not found.");
 
             } else {
 
-                alert("Failed to delete interview.");
+                toast.error(getApiErrorMessage(error, "Failed to delete interview."));
 
             }
 
@@ -317,7 +280,7 @@ function InterviewDetails() {
 
         if (!questionForm.questionText.trim()) {
 
-            alert("Please enter the question.");
+            toast.error("Please enter the question.");
 
             return;
         }
@@ -343,11 +306,6 @@ function InterviewDetails() {
                 }
             );
 
-            console.log(
-                "Question created:",
-                response.data
-            );
-
             setQuestions((previous) => [
                 ...previous,
                 response.data
@@ -362,32 +320,25 @@ function InterviewDetails() {
 
             setShowQuestionModal(false);
 
-            alert("Question added successfully.");
+            toast.success("Question added successfully.");
 
         } catch (error) {
 
-            console.error(
-                "Create question error:",
-                error
-            );
-
             if (error.response?.status === 403) {
 
-                alert(
+                toast.error(
                     "You do not have permission to add questions to this interview."
                 );
 
             } else if (error.response?.status === 400) {
 
-                alert(
+                toast.error(
                     "Invalid question data. Please check the form."
                 );
 
             } else {
 
-                alert(
-                    "Failed to create question."
-                );
+                toast.error(getApiErrorMessage(error, "Failed to create question."));
 
             }
 
@@ -454,7 +405,7 @@ function InterviewDetails() {
 
         if (!journalForm.experience.trim()) {
 
-            alert(
+            toast.error(
                 "Please describe your interview experience."
             );
 
@@ -486,11 +437,6 @@ function InterviewDetails() {
                 }
             );
 
-            console.log(
-                "Journal entry created:",
-                response.data
-            );
-
             setJournalEntries((previous) => [
                 ...previous,
                 response.data
@@ -505,34 +451,27 @@ function InterviewDetails() {
 
             setShowJournalModal(false);
 
-            alert(
+            toast.success(
                 "Journal entry added successfully."
             );
 
         } catch (error) {
 
-            console.error(
-                "Create journal error:",
-                error
-            );
-
             if (error.response?.status === 403) {
 
-                alert(
+                toast.error(
                     "You do not have permission to add a journal entry."
                 );
 
             } else if (error.response?.status === 400) {
 
-                alert(
+                toast.error(
                     "Invalid journal data. Please check the form."
                 );
 
             } else {
 
-                alert(
-                    "Failed to create journal entry."
-                );
+                toast.error(getApiErrorMessage(error, "Failed to create journal entry."));
 
             }
 

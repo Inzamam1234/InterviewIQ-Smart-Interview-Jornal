@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 function Login() {
 
@@ -17,6 +18,7 @@ function Login() {
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [slowRequest, setSlowRequest] = useState(false);
     const [notice, setNotice] = useState(
         () => location.state?.registered
             ? "Your account was created. Sign in to continue."
@@ -31,6 +33,16 @@ function Login() {
         }
     }, []);
 
+    useEffect(() => {
+        if (!loading) {
+            return undefined;
+        }
+
+        const timer = window.setTimeout(() => setSlowRequest(true), 5000);
+
+        return () => window.clearTimeout(timer);
+    }, [loading]);
+
 
     const handleLogin = async (e) => {
 
@@ -38,6 +50,7 @@ function Login() {
 
         setError("");
         setNotice("");
+        setSlowRequest(false);
         setLoading(true);
 
         const normalizedEmail = email.trim().toLowerCase();
@@ -70,15 +83,18 @@ function Login() {
 
         } catch (error) {
 
-            console.error("Login error:", error);
-
             setError(
-                error.response?.data?.message ||
-                "Unable to sign in right now. Please try again."
+                error.response?.status === 401
+                    ? "Invalid email or password."
+                    : getApiErrorMessage(
+                        error,
+                        "Unable to sign in right now. Please try again."
+                    )
             );
 
         } finally {
 
+            setSlowRequest(false);
             setLoading(false);
 
         }
@@ -214,8 +230,14 @@ function Login() {
                     )}
 
                     {error && (
-                        <div style={styles.error}>
+                        <div style={styles.error} role="alert" aria-live="assertive">
                             {error}
+                        </div>
+                    )}
+
+                    {slowRequest && !error && (
+                        <div style={styles.wakingNotice} role="status" aria-live="polite">
+                            The server is waking up. This first request can take a little longer.
                         </div>
                     )}
 
@@ -454,6 +476,17 @@ const styles = {
         color: "#047857",
         background: "#ecfdf5",
         border: "1px solid #a7f3d0",
+        borderRadius: "8px",
+        padding: "10px 12px",
+        fontSize: "13px",
+        marginTop: "-22px",
+        marginBottom: "18px"
+    },
+
+    wakingNotice: {
+        color: "#92400e",
+        background: "#fffbeb",
+        border: "1px solid #fde68a",
         borderRadius: "8px",
         padding: "10px 12px",
         fontSize: "13px",

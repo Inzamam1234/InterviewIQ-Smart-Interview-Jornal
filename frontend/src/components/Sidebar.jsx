@@ -66,11 +66,6 @@ function Sidebar({ mobileOpen = false, onClose = () => {} }) {
 
             } catch (error) {
 
-                console.error(
-                    "Failed to load current user:",
-                    error
-                );
-
                 // If the token is invalid/expired,
                 // send the user back to login.
                 if (

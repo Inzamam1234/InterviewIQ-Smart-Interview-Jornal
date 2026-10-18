@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 function Journal() {
 
@@ -33,12 +35,7 @@ function Journal() {
 
         } catch (err) {
 
-            console.error("Failed to load interviews:", err);
-
-            setError(
-                err.response?.data?.message ||
-                "Failed to load interviews."
-            );
+            setError(getApiErrorMessage(err, "Failed to load interviews."));
 
         } finally {
 
@@ -78,15 +75,7 @@ function Journal() {
 
         } catch (err) {
 
-            console.error(
-                "Failed to load journal entries:",
-                err
-            );
-
-            setError(
-                err.response?.data?.message ||
-                "Failed to load journal entries."
-            );
+            setError(getApiErrorMessage(err, "Failed to load journal entries."));
 
             setJournalEntries([]);
 
@@ -139,12 +128,12 @@ function Journal() {
         e.preventDefault();
 
         if (!selectedInterview) {
-            alert("Please select an interview.");
+            toast.error("Please select an interview.");
             return;
         }
 
         if (!form.experience.trim()) {
-            alert("Please enter your interview experience.");
+            toast.error("Please enter your interview experience.");
             return;
         }
 
@@ -172,17 +161,11 @@ function Journal() {
                 confidenceLevel: 5,
             });
 
+            toast.success("Journal entry saved.");
+
         } catch (err) {
 
-            console.error(
-                "Failed to save journal:",
-                err
-            );
-
-            alert(
-                err.response?.data?.message ||
-                "Failed to save journal entry."
-            );
+            toast.error(getApiErrorMessage(err, "Failed to save journal entry."));
 
         } finally {
 

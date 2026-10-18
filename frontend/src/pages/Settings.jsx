@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 
 function Settings() {
@@ -37,13 +38,11 @@ function Settings() {
 
             } catch (error) {
 
-                console.error(
-                    "Failed to load user:",
-                    error
-                );
-
                 setError(
-                    "Unable to load your account information."
+                    getApiErrorMessage(
+                        error,
+                        "Unable to load your account information."
+                    )
                 );
 
             } finally {

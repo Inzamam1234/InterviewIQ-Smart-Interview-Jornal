@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
+import QuickAddInterviewModal from "../components/QuickAddInterviewModal";
+import InterviewProgressStepper from "../components/InterviewProgressStepper";
 
 function Interviews() {
 
@@ -18,6 +21,7 @@ function Interviews() {
     const [statusFilter, setStatusFilter] = useState("ALL");
 
     const [searching, setSearching] = useState(false);
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
 
 
     /* ================================================= */
@@ -63,7 +67,7 @@ function Interviews() {
     /* Normal Paginated Interviews                        */
     /* ================================================= */
 
-    async function fetchInterviews() {
+    async function fetchInterviews(pageToFetch = page) {
 
         setLoading(true);
         setError("");
@@ -72,19 +76,15 @@ function Interviews() {
 
             const response = await api.get("/interviews", {
                 params: {
-                    page: page,
+                    page: pageToFetch,
                     size: 5
                 }
             });
-
-            console.log("Interviews data:", response.data);
 
             setInterviews(response.data.content || []);
             setTotalPages(response.data.totalPages || 0);
 
         } catch (error) {
-
-            console.error("Interviews API error:", error);
 
             handleApiError(error);
 
@@ -180,8 +180,6 @@ function Interviews() {
 
         } catch (error) {
 
-            console.error("Search API error:", error);
-
             handleApiError(error);
 
         } finally {
@@ -199,25 +197,7 @@ function Interviews() {
 
     const handleApiError = (error) => {
 
-        if (error.response?.status === 401) {
-
-            setError(
-                "Your session has expired. Please login again."
-            );
-
-        } else if (error.response?.status === 403) {
-
-            setError(
-                "You do not have permission to view these interviews."
-            );
-
-        } else {
-
-            setError(
-                "Unable to load interviews."
-            );
-
-        }
+        setError(getApiErrorMessage(error, "Unable to load interviews."));
 
     };
 
@@ -233,6 +213,23 @@ function Interviews() {
         setPage(0);
         setError("");
 
+    };
+
+    const handleInterviewCreated = async () => {
+        setShowQuickAdd(false);
+        setPage(0);
+
+        if (search.trim() || statusFilter !== "ALL") {
+            await searchInterviews();
+        } else {
+            await fetchInterviews(0);
+        }
+    };
+
+    const handleInterviewUpdated = (updatedInterview) => {
+        setInterviews((current) => current.map((interview) =>
+            interview.id === updatedInterview.id ? updatedInterview : interview
+        ));
     };
 
 
@@ -378,9 +375,7 @@ function Interviews() {
 
                 <button
                     style={styles.addButton}
-                    onClick={() =>
-                        navigate("/interviews/new")
-                    }
+                    onClick={() => setShowQuickAdd(true)}
                 >
 
                     <span style={styles.plus}>
@@ -627,9 +622,7 @@ function Interviews() {
 
                         <button
                             style={styles.addButton}
-                            onClick={() =>
-                                navigate("/interviews/new")
-                            }
+                            onClick={() => setShowQuickAdd(true)}
                         >
 
                             <span style={styles.plus}>
@@ -779,6 +772,13 @@ function Interviews() {
 
                             </div>
 
+                            <div style={styles.cardProgress}>
+                                <InterviewProgressStepper
+                                    interview={interview}
+                                    onUpdated={handleInterviewUpdated}
+                                />
+                            </div>
+
                         </div>
 
                     ))}
@@ -865,6 +865,12 @@ function Interviews() {
                     </div>
 
                 )}
+
+            <QuickAddInterviewModal
+                open={showQuickAdd}
+                onClose={() => setShowQuickAdd(false)}
+                onCreated={handleInterviewCreated}
+            />
 
         </div>
     );
@@ -1030,7 +1036,8 @@ const styles = {
 
 
     card: {
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr) auto",
         justifyContent: "space-between",
         alignItems: "center",
         background: "#ffffff",
@@ -1040,6 +1047,13 @@ const styles = {
         cursor: "pointer",
         transition:
             "box-shadow 0.2s ease, transform 0.2s ease"
+    },
+
+
+    cardProgress: {
+        gridColumn: "1 / -1",
+        minWidth: 0,
+        borderTop: "1px solid #f1f5f9"
     },
 
 

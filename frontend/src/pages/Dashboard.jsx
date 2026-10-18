@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
+import QuickAddInterviewModal from "../components/QuickAddInterviewModal";
+import InterviewProgressStepper from "../components/InterviewProgressStepper";
 
 function Dashboard() {
 
@@ -13,6 +16,7 @@ function Dashboard() {
     const [error, setError] = useState("");
 
     const [search, setSearch] = useState("");
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
 
 
     // =========================================================
@@ -54,17 +58,6 @@ function Dashboard() {
             ]);
 
 
-            console.log(
-                "Dashboard data:",
-                dashboardResponse.data
-            );
-
-            console.log(
-                "Recent interviews:",
-                interviewsResponse.data
-            );
-
-
             setDashboard(
                 dashboardResponse.data
             );
@@ -77,31 +70,12 @@ function Dashboard() {
 
         } catch (error) {
 
-            console.error(
-                "Dashboard API error:",
-                error
-            );
-
-
-            if (error.response?.status === 401) {
-
-                setError(
-                    "Your session has expired. Please login again."
-                );
-
-            } else if (error.response?.status === 403) {
-
-                setError(
-                    "You do not have permission to view the dashboard."
-                );
-
-            } else {
-
-                setError(
+            setError(
+                getApiErrorMessage(
+                    error,
                     "Unable to load dashboard. Please try again."
-                );
-
-            }
+                )
+            );
 
         } finally {
 
@@ -110,6 +84,12 @@ function Dashboard() {
         }
 
     }
+
+    const handleRecentInterviewUpdated = (updatedInterview) => {
+        setRecentInterviews((current) => current.map((interview) =>
+            interview.id === updatedInterview.id ? updatedInterview : interview
+        ));
+    };
 
 
     // =========================================================
@@ -420,9 +400,7 @@ function Dashboard() {
 
                 <button
                     style={styles.welcomeButton}
-                    onClick={() =>
-                        navigate("/interviews/new")
-                    }
+                    onClick={() => setShowQuickAdd(true)}
                 >
                     {total === 0 ? "Add your first interview" : "Add interview"} →
                 </button>
@@ -452,7 +430,7 @@ function Dashboard() {
                             number="1"
                             title="Add an interview"
                             description="Track the company, role, round, and status."
-                            onClick={() => navigate("/interviews/new")}
+                            onClick={() => setShowQuickAdd(true)}
                         />
                         <OnboardingStep
                             number="2"
@@ -567,7 +545,7 @@ function Dashboard() {
                                 title="Add your next interview"
                                 description="Keep your pipeline and preparation in one place."
                                 buttonLabel="Add interview"
-                                onClick={() => navigate("/interviews/new")}
+                                onClick={() => setShowQuickAdd(true)}
                             />
                         )}
                     </div>
@@ -702,11 +680,7 @@ function Dashboard() {
 
                         <button
                             style={styles.actionButton}
-                            onClick={() =>
-                                navigate(
-                                    "/interviews/new"
-                                )
-                            }
+                            onClick={() => setShowQuickAdd(true)}
                         >
 
                             <div
@@ -901,7 +875,7 @@ function Dashboard() {
                             <button
                                 type="button"
                                 style={styles.emptyStateButton}
-                                onClick={() => navigate("/interviews/new")}
+                                onClick={() => setShowQuickAdd(true)}
                             >
                                 Add interview
                             </button>
@@ -1022,6 +996,14 @@ function Dashboard() {
                                         )}
                                     </span>
 
+                                    <div style={styles.recentProgress}>
+                                        <InterviewProgressStepper
+                                            interview={interview}
+                                            compact
+                                            onUpdated={handleRecentInterviewUpdated}
+                                        />
+                                    </div>
+
                                 </div>
 
                             )
@@ -1032,6 +1014,12 @@ function Dashboard() {
                 )}
 
             </div>
+
+            <QuickAddInterviewModal
+                open={showQuickAdd}
+                onClose={() => setShowQuickAdd(false)}
+                onCreated={loadDashboard}
+            />
 
         </div>
 
@@ -1695,13 +1683,20 @@ const styles = {
 
 
     recentItem: {
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "auto minmax(0, 1fr) auto auto",
         alignItems: "center",
         gap: "16px",
         padding: "16px 0",
         borderBottom:
             "1px solid #f0f1f4",
         cursor: "pointer"
+    },
+
+
+    recentProgress: {
+        gridColumn: "1 / -1",
+        minWidth: 0
     },
 
 

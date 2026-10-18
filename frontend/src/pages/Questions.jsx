@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 import api from "../api/axios";
+import { getApiErrorMessage } from "../api/errorMessage";
 
 function Questions() {
 
@@ -72,12 +74,7 @@ function Questions() {
                             role: interview.role
                         }));
 
-                    } catch (err) {
-
-                        console.error(
-                            `Failed to load questions for interview ${interview.id}`,
-                            err
-                        );
+                    } catch {
 
                         return [];
                     }
@@ -90,20 +87,7 @@ function Questions() {
 
         } catch (err) {
 
-            console.error("========== CREATE QUESTION ERROR ==========");
-            console.error("Status:", err.response?.status);
-            console.error("Response:", err.response?.data);
-            console.error("Full error:", err);
-
-            alert(
-                `Failed to create question.\n\nStatus: ${
-                    err.response?.status || "Unknown"
-                }\n\n${
-                    typeof err.response?.data === "string"
-                        ? err.response.data
-                        : JSON.stringify(err.response?.data)
-                }`
-            );
+            setError(getApiErrorMessage(err, "Failed to load questions."));
 
         } finally {
 
@@ -234,12 +218,12 @@ function Questions() {
         e.preventDefault();
 
         if (!form.interviewId) {
-            alert("Please select an interview.");
+            toast.error("Please select an interview.");
             return;
         }
 
         if (!form.questionText.trim()) {
-            alert("Please enter the question.");
+            toast.error("Please enter the question.");
             return;
         }
 
@@ -272,15 +256,11 @@ function Questions() {
             });
 
             setShowAddForm(false);
+            toast.success("Question added successfully.");
 
         } catch (err) {
 
-            console.error("Failed to create question:", err);
-
-            alert(
-                err.response?.data?.message ||
-                "Failed to create question."
-            );
+            toast.error(getApiErrorMessage(err, "Failed to create question."));
 
         } finally {
 
