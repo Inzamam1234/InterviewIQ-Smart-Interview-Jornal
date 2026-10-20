@@ -14,6 +14,7 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 - Quickly add an interview with only the company, role, date, and current stage, then advance its progress from the dashboard or interview list.
 - See all active interviews with a next-round date in dashboard reminders, including overdue, today, tomorrow, and upcoming labels.
 - Copy a personalized, editable follow-up email template from an interview details page.
+- Use an interview-specific Preparation Hub with a progress checklist, question and reflection counts, and quick links into the relevant workspace.
 - Use responsive mobile navigation, client-side validation, accessible focus states, and clear success/error feedback.
 - Use consistent inline/toast feedback instead of browser-native alerts, including helpful messages when a hosted backend is waking up.
 - Register and sign in with BCrypt-hashed passwords and JWT sessions.
@@ -178,6 +179,8 @@ The hosted smoke test verified that the Render frontend serves the login page, t
 
 The quick-add workflow keeps the existing full interview form available for detailed records. The dashboard and interview list provide one-click progress updates for Applied, Screening, Technical, HR, and Offer; each update preserves the existing interview notes and dates.
 The dashboard reminder feed uses the authenticated `GET /interviews/upcoming` endpoint and excludes selected or rejected interviews. It is intentionally in-app and free; calendar export and optional email delivery can be added later without changing the existing interview model.
+
+The Preparation Hub is available on each interview details page. Its five-step checklist is saved locally in the browser, while questions, reflections, interview progress, and dates continue to use the existing authenticated data flows. This keeps the feature backward-compatible and avoids a database migration.
 
 ## API access rules
 

@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { getApiErrorMessage } from "../api/errorMessage";
 import InterviewProgressStepper from "../components/InterviewProgressStepper";
+import PreparationHub from "../components/PreparationHub";
 
 function InterviewDetails() {
 
@@ -778,6 +779,17 @@ function InterviewDetails() {
             </div>
 
 
+            {/* Preparation Hub */}
+
+            <PreparationHub
+                interview={interview}
+                questions={questions}
+                journalEntries={journalEntries}
+                onAddQuestion={() => setShowQuestionModal(true)}
+                onAddJournal={() => setShowJournalModal(true)}
+            />
+
+
             {/* Follow-up email */}
 
             <div style={styles.card}>
@@ -885,7 +897,7 @@ function InterviewDetails() {
             {/* Interview Questions                */}
             {/* ================================= */}
 
-            <div style={styles.card}>
+            <div style={styles.card} id="interview-questions">
 
                 <div style={styles.sectionHeader}>
 
@@ -1197,7 +1209,7 @@ function InterviewDetails() {
             {/* Interview Journal                 */}
             {/* ================================= */}
 
-            <div style={styles.card}>
+            <div style={styles.card} id="interview-journal">
 
                 <div style={styles.sectionHeader}>
 
