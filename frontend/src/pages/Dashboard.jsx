@@ -11,6 +11,7 @@ function Dashboard() {
 
     const [dashboard, setDashboard] = useState(null);
     const [recentInterviews, setRecentInterviews] = useState([]);
+    const [upcomingInterviews, setUpcomingInterviews] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -43,7 +44,8 @@ function Dashboard() {
 
             const [
                 dashboardResponse,
-                interviewsResponse
+                interviewsResponse,
+                upcomingResponse
             ] = await Promise.all([
 
                 api.get("/dashboard"),
@@ -53,7 +55,9 @@ function Dashboard() {
                         page: 0,
                         size: 5
                     }
-                })
+                }),
+
+                api.get("/interviews/upcoming")
 
             ]);
 
@@ -66,6 +70,8 @@ function Dashboard() {
             setRecentInterviews(
                 interviewsResponse.data?.content || []
             );
+
+            setUpcomingInterviews(upcomingResponse.data || []);
 
 
         } catch (error) {
@@ -89,6 +95,26 @@ function Dashboard() {
         setRecentInterviews((current) => current.map((interview) =>
             interview.id === updatedInterview.id ? updatedInterview : interview
         ));
+
+        setUpcomingInterviews((current) => {
+            const isEligible = Boolean(
+                updatedInterview.nextRoundDate &&
+                !["REJECTED", "SELECTED"].includes(updatedInterview.status)
+            );
+
+            const withoutUpdated = current.filter(
+                (interview) => interview.id !== updatedInterview.id
+            );
+
+            if (!isEligible) {
+                return withoutUpdated;
+            }
+
+            return [...withoutUpdated, updatedInterview].sort(
+                (first, second) =>
+                    new Date(first.nextRoundDate) - new Date(second.nextRoundDate)
+            );
+        });
     };
 
 
@@ -313,19 +339,31 @@ function Dashboard() {
         localStorage.getItem("interviewiq.interviewDraft")
     );
 
-    const upcomingInterviews = recentInterviews
-        .filter((interview) => {
-            if (!interview.nextRoundDate) {
-                return false;
-            }
+    const getReminderLabel = (date) => {
 
-            return !["REJECTED", "SELECTED"].includes(interview.status);
-        })
-        .sort(
-            (first, second) =>
-                new Date(first.nextRoundDate) - new Date(second.nextRoundDate)
-        )
-        .slice(0, 2);
+        const targetDate = new Date(`${String(date).slice(0, 10)}T00:00:00`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const difference = Math.round(
+            (targetDate - today) / (1000 * 60 * 60 * 24)
+        );
+
+        if (difference < 0) {
+            const days = Math.abs(difference);
+            return `Overdue by ${days} day${days === 1 ? "" : "s"}`;
+        }
+
+        if (difference === 0) {
+            return "Today";
+        }
+
+        if (difference === 1) {
+            return "Tomorrow";
+        }
+
+        return `In ${difference} days`;
+    };
 
 
     return (
@@ -530,11 +568,11 @@ function Dashboard() {
                             />
                         )}
 
-                        {upcomingInterviews.map((interview) => (
+                        {upcomingInterviews.slice(0, 5).map((interview) => (
                             <NextAction
                                 key={interview.id}
                                 title={`${interview.companyName} · ${interview.role}`}
-                                description={`Next round: ${formatDate(interview.nextRoundDate)}`}
+                                description={`${getReminderLabel(interview.nextRoundDate)} · ${formatDate(interview.nextRoundDate)}`}
                                 buttonLabel="View interview"
                                 onClick={() => navigate(`/interviews/${interview.id}`)}
                             />

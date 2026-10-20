@@ -16,6 +16,11 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
 
     List<Interview> findByUserId(Long userId);
     List<Interview> findByStatus(InterviewStatus status);
+    List<Interview> findByNextRoundDateIsNotNullAndStatusNotInOrderByNextRoundDateAsc(
+            List<InterviewStatus> excludedStatuses);
+    List<Interview> findByUserIdAndNextRoundDateIsNotNullAndStatusNotInOrderByNextRoundDateAsc(
+            Long userId,
+            List<InterviewStatus> excludedStatuses);
     long countByStatus(InterviewStatus status);
     List<Interview> findByUserIdAndStatus(Long userId, InterviewStatus status);
     Page<Interview> findByUserId(Long userId, Pageable pageable);

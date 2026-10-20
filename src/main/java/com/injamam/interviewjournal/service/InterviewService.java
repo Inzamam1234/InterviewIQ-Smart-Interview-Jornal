@@ -117,6 +117,26 @@ public class InterviewService {
         return interviewRepository.findByUserId(userId);
     }
 
+    public List<Interview> getUpcomingInterviews() {
+
+        User currentUser = getCurrentUser();
+        List<InterviewStatus> excludedStatuses = List.of(
+                InterviewStatus.REJECTED,
+                InterviewStatus.SELECTED
+        );
+
+        if (currentUser.getRole() == Role.ADMIN) {
+            return interviewRepository
+                    .findByNextRoundDateIsNotNullAndStatusNotInOrderByNextRoundDateAsc(
+                            excludedStatuses);
+        }
+
+        return interviewRepository
+                .findByUserIdAndNextRoundDateIsNotNullAndStatusNotInOrderByNextRoundDateAsc(
+                        currentUser.getId(),
+                        excludedStatuses);
+    }
+
     public List<Interview> getInterviewsByStatus(InterviewStatus status) {
 
         User currentUser = getCurrentUser();

@@ -176,6 +176,40 @@ function InterviewDetails() {
     };
 
 
+    const handleCopyFollowUpEmail = async () => {
+
+        const round = interview.currentRound || "interview";
+        const message = [
+            `Subject: Thank you for the ${round} at ${interview.companyName}`,
+            "",
+            "Hi [Recruiter or interviewer name],",
+            "",
+            `Thank you for taking the time to speak with me about the ${interview.role} position. I enjoyed learning more about the role and the team.`,
+            "",
+            "Please let me know if you need any additional information from me. I look forward to hearing about the next steps.",
+            "",
+            "Best,",
+            "[Your name]"
+        ].join("\n");
+
+        try {
+
+            if (!navigator.clipboard) {
+                throw new Error("Clipboard unavailable");
+            }
+
+            await navigator.clipboard.writeText(message);
+            toast.success("Follow-up email copied to your clipboard.");
+
+        } catch {
+
+            toast.error("Unable to copy the follow-up email. Please try again.");
+
+        }
+
+    };
+
+
     /* -------------------------------- */
     /* Fetch Questions                  */
     /* -------------------------------- */
@@ -740,6 +774,37 @@ function InterviewDetails() {
                 <p style={styles.quickEditHint}>
                     Leave the date blank and save to remove it.
                 </p>
+
+            </div>
+
+
+            {/* Follow-up email */}
+
+            <div style={styles.card}>
+
+                <div style={styles.sectionHeader}>
+
+                    <div>
+
+                        <h2 style={styles.cardTitle}>
+                            Follow up after this interview
+                        </h2>
+
+                        <p style={styles.sectionDescription}>
+                            Copy a ready-to-edit thank-you email with this interview’s details.
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        style={styles.primaryButton}
+                        onClick={handleCopyFollowUpEmail}
+                    >
+                        Copy email template
+                    </button>
+
+                </div>
 
             </div>
 

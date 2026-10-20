@@ -34,6 +34,12 @@ public class InterviewController {
                 .body(interview);
     }
 
+    @GetMapping("/upcoming")
+    public List<Interview> getUpcomingInterviews() {
+
+        return interviewService.getUpcomingInterviews();
+    }
+
     @GetMapping("/all")
     public List<Interview> getAllInterviews() {
         return interviewService.getAllInterviews();

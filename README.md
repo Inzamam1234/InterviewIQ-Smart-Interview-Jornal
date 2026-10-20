@@ -12,6 +12,8 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 - Follow a guided first-time onboarding flow with dashboard next actions.
 - Save new interview drafts locally and resume them after leaving the form.
 - Quickly add an interview with only the company, role, date, and current stage, then advance its progress from the dashboard or interview list.
+- See all active interviews with a next-round date in dashboard reminders, including overdue, today, tomorrow, and upcoming labels.
+- Copy a personalized, editable follow-up email template from an interview details page.
 - Use responsive mobile navigation, client-side validation, accessible focus states, and clear success/error feedback.
 - Use consistent inline/toast feedback instead of browser-native alerts, including helpful messages when a hosted backend is waking up.
 - Register and sign in with BCrypt-hashed passwords and JWT sessions.
@@ -175,11 +177,13 @@ Frontend production checks currently pass with `npm run lint` and `npm run build
 The hosted smoke test verified that the Render frontend serves the login page, the signup screen opens, the browser reports no frontend console errors, the backend starts successfully with a connection to Neon PostgreSQL, a synthetic account can register and log in, and an authenticated session can load the dashboard. Full admin actions require an admin account in the hosted database and should be exercised without sharing passwords in source control or chat.
 
 The quick-add workflow keeps the existing full interview form available for detailed records. The dashboard and interview list provide one-click progress updates for Applied, Screening, Technical, HR, and Offer; each update preserves the existing interview notes and dates.
+The dashboard reminder feed uses the authenticated `GET /interviews/upcoming` endpoint and excludes selected or rejected interviews. It is intentionally in-app and free; calendar export and optional email delivery can be added later without changing the existing interview model.
 
 ## API access rules
 
 - `/auth/login` and `/auth/register` are public.
 - `/users/me` is available to authenticated users.
+- `/interviews/upcoming` returns the authenticated user's active interviews with next-round dates, ordered from soonest to latest; admins receive all active interviews.
 - `/users/**` and `/interviews/all` are admin-only.
 - Normal users can access only their own interviews and related questions/journal entries.
 - Admins can view and manage all interviews and related records.
