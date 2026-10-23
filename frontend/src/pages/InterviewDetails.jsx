@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { getApiErrorMessage } from "../api/errorMessage";
 import InterviewProgressStepper from "../components/InterviewProgressStepper";
+import JobDescriptionAnalyzer from "../components/JobDescriptionAnalyzer";
 import PreparationHub from "../components/PreparationHub";
 
 function InterviewDetails() {
@@ -37,6 +38,12 @@ function InterviewDetails() {
     const [error, setError] = useState("");
     const [nextRoundDate, setNextRoundDate] = useState("");
     const [savingNextRoundDate, setSavingNextRoundDate] = useState(false);
+
+    const [preparationProfile, setPreparationProfile] = useState(null);
+    const [jobDescription, setJobDescription] = useState("");
+    const [preparationLoading, setPreparationLoading] = useState(true);
+    const [preparationError, setPreparationError] = useState("");
+    const [savingPreparation, setSavingPreparation] = useState(false);
 
     /* -------------------------------- */
     /* Question Modal                   */
@@ -121,6 +128,48 @@ function InterviewDetails() {
 
 
     /* -------------------------------- */
+    /* Fetch role preparation           */
+    /* -------------------------------- */
+
+    useEffect(() => {
+
+        const fetchPreparation = async () => {
+
+            setPreparationLoading(true);
+            setPreparationError("");
+
+            try {
+
+                const response = await api.get(
+                    `/interviews/${id}/coach/profile`
+                );
+
+                setPreparationProfile(response.data);
+                setJobDescription(response.data.jobDescription || "");
+
+            } catch (error) {
+
+                setPreparationError(
+                    getApiErrorMessage(
+                        error,
+                        "Unable to load the role analysis."
+                    )
+                );
+
+            } finally {
+
+                setPreparationLoading(false);
+
+            }
+
+        };
+
+        fetchPreparation();
+
+    }, [id]);
+
+
+    /* -------------------------------- */
     /* Quick interview updates          */
     /* -------------------------------- */
 
@@ -171,6 +220,48 @@ function InterviewDetails() {
         } finally {
 
             setSavingNextRoundDate(false);
+
+        }
+
+    };
+
+
+    const handleAnalyzeRole = async (event) => {
+
+        event.preventDefault();
+
+        if (!jobDescription.trim()) {
+            toast.error("Paste a job description to analyze this role.");
+            return;
+        }
+
+        setSavingPreparation(true);
+        setPreparationError("");
+
+        try {
+
+            const response = await api.put(
+                `/interviews/${id}/coach/profile`,
+                { jobDescription }
+            );
+
+            setPreparationProfile(response.data);
+            setJobDescription(response.data.jobDescription || jobDescription.trim());
+            toast.success("Role analysis updated.");
+
+        } catch (error) {
+
+            setPreparationError(
+                getApiErrorMessage(
+                    error,
+                    "Unable to analyze this role. Please try again."
+                )
+            );
+            toast.error("Unable to analyze this role.");
+
+        } finally {
+
+            setSavingPreparation(false);
 
         }
 
@@ -779,12 +870,27 @@ function InterviewDetails() {
             </div>
 
 
+            {/* Role analyzer */}
+
+            <JobDescriptionAnalyzer
+                profile={preparationProfile}
+                role={interview.role}
+                loading={preparationLoading}
+                saving={savingPreparation}
+                error={preparationError}
+                jobDescription={jobDescription}
+                onJobDescriptionChange={setJobDescription}
+                onAnalyze={handleAnalyzeRole}
+            />
+
+
             {/* Preparation Hub */}
 
             <PreparationHub
                 interview={interview}
                 questions={questions}
                 journalEntries={journalEntries}
+                coachProfile={preparationProfile}
                 onAddQuestion={() => setShowQuestionModal(true)}
                 onAddJournal={() => setShowJournalModal(true)}
             />

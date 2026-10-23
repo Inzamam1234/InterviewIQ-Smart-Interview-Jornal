@@ -32,6 +32,7 @@ function PreparationHub({
     interview,
     questions,
     journalEntries,
+    coachProfile,
     onAddQuestion,
     onAddJournal
 }) {
@@ -100,6 +101,12 @@ function PreparationHub({
                     <p style={styles.storageNote}>
                         Checklist progress is saved on this device.
                     </p>
+                    {coachProfile?.extractedSkills?.length > 0 && (
+                        <p style={styles.analysisNote}>
+                            Role focus: {coachProfile.extractedSkills.slice(0, 5).join(", ")}
+                            {coachProfile.extractedSkills.length > 5 ? " and more" : ""}
+                        </p>
+                    )}
                 </div>
                 <div style={styles.progressBadge}>
                     {completedCount}/{DEFAULT_TASKS.length} complete
@@ -239,6 +246,12 @@ const styles = {
         margin: "5px 0 0",
         color: "#9ca3af",
         fontSize: "11px"
+    },
+    analysisNote: {
+        margin: "7px 0 0",
+        color: "#4f46e5",
+        fontSize: "12px",
+        fontWeight: "600"
     },
     progressBadge: {
         flexShrink: 0,

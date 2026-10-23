@@ -15,6 +15,7 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 - See all active interviews with a next-round date in dashboard reminders, including overdue, today, tomorrow, and upcoming labels.
 - Copy a personalized, editable follow-up email template from an interview details page.
 - Use an interview-specific Preparation Hub with a progress checklist, question and reflection counts, and quick links into the relevant workspace.
+- Paste a job description into the Role Analyzer to detect common skills, focus areas, and practice prompts for that interview.
 - Use responsive mobile navigation, client-side validation, accessible focus states, and clear success/error feedback.
 - Use consistent inline/toast feedback instead of browser-native alerts, including helpful messages when a hosted backend is waking up.
 - Register and sign in with BCrypt-hashed passwords and JWT sessions.
@@ -182,11 +183,14 @@ The dashboard reminder feed uses the authenticated `GET /interviews/upcoming` en
 
 The Preparation Hub is available on each interview details page. Its five-step checklist is saved locally in the browser, while questions, reflections, interview progress, and dates continue to use the existing authenticated data flows. This keeps the feature backward-compatible and avoids a database migration.
 
+The Role Analyzer saves a job description and its deterministic skill analysis in a separate preparation record for the interview. It requires no external AI provider or paid service; optional AI feedback can be layered on later without changing the existing interview records.
+
 ## API access rules
 
 - `/auth/login` and `/auth/register` are public.
 - `/users/me` is available to authenticated users.
 - `/interviews/upcoming` returns the authenticated user's active interviews with next-round dates, ordered from soonest to latest; admins receive all active interviews.
+- `/interviews/{id}/coach/profile` returns or saves the authenticated user's job description analysis; admins can access all interview preparation records.
 - `/users/**` and `/interviews/all` are admin-only.
 - Normal users can access only their own interviews and related questions/journal entries.
 - Admins can view and manage all interviews and related records.

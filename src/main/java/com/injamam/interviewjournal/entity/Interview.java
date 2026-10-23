@@ -41,6 +41,10 @@ public class Interview {
     @JsonIgnore
     private List<JournalEntry> journalEntries;
 
+    @OneToOne(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private InterviewPreparation preparation;
+
     // Default Constructor
     public Interview() {
     }
@@ -113,5 +117,14 @@ public class Interview {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    @JsonIgnore
+    public InterviewPreparation getPreparation() {
+        return preparation;
+    }
+
+    public void setPreparation(InterviewPreparation preparation) {
+        this.preparation = preparation;
     }
 }
