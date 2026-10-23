@@ -29,6 +29,7 @@ InterviewIQ is a React and Spring Boot application for tracking job applications
 - Authentication: JWT with JJWT and BCrypt
 - Database: PostgreSQL
 - API documentation: Springdoc OpenAPI / Swagger UI
+- Operations: public `/health` liveness endpoint for Render and uptime monitors
 - Deployment: Docker Compose with PostgreSQL, Spring Boot, and Nginx; Render and Neon free tiers for the current hosted deployment
 
 ## Repository audit
@@ -68,6 +69,8 @@ The current no-cost hosted deployment uses Render for the frontend and Spring Bo
 - Database: Neon project `interviewiq-production`, Singapore region, free plan
 
 Render keeps the backend on its free instance, which can sleep after inactivity. The first request after sleep may take approximately 50 seconds or more. Secrets are stored as private Render environment variables and are not committed to this repository. The frontend API URL is configured at build time through `VITE_API_URL`; the backend CORS setting must contain the exact frontend HTTPS origin.
+
+For uptime monitoring, configure a free HTTPS monitor to request `https://interviewiq-api-ggbi.onrender.com/health`. A healthy response is a JSON payload with `"status": "UP"`; the endpoint intentionally exposes no database credentials, connection details, or environment values. Configure Render's web service health check path as `/health` if a service health check is enabled.
 
 The hosted Neon database was created as a fresh production database and its schema was initialized by Hibernate with `JPA_DDL_AUTO=update`. Existing local PostgreSQL records have not been copied automatically. Before importing existing records, create and verify a backup, then use an explicit export/import or versioned migration process.
 
